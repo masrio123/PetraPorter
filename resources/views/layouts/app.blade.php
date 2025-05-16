@@ -1,105 +1,140 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+
+<html lang="en" class="layout-menu-fixed layout-compact" data-assets-path="../assets/"
+    data-template="vertical-menu-template-free">
+
 <head>
-    <meta charset="UTF-8" />
-    <title>@yield('title', 'Admin Panel - Aplikasi Kantin')</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <title>AJM</title>
 
-    <style>
-        body {
-            min-height: 100vh;
-            background-color: #f8f9fa;
-            margin: 0;
-        }
+    <meta name="description" content="" />
 
-        /* Sidebar */
-        #sidebar {
-            height: 100vh;
-            width: 220px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background-color: #d9d9d9;
-            color: #333;
-            padding-top: 1rem;
-        }
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico" />
 
-        #sidebar .nav-link {
-            color: #555;
-            font-weight: 500;
-        }
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+        rel="stylesheet" />
 
-        #sidebar .nav-link.active,
-        #sidebar .nav-link:hover {
-            color: #000;
-            background-color: #bfbfbf;
-            border-radius: 4px;
-        }
+    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/iconify-icons.css') }}" />
 
-        /* Content */
-        #main-content {
-            margin-left: 220px;
-            padding: 0; /* hilangkan padding agar navbar nempel */
-        }
+    <!-- Core CSS -->
+    <!-- build:css assets/vendor/css/theme.css  -->
 
-        /* Navbar atas */
-        .navbar-custom {
-            background-color: #e7e7e7;
-            border-radius: 0;
-            margin: 0;
-            padding: 0.5rem 1rem;
-        }
+    <link rel="stylesheet" href="{{ asset('assets/vendor/css/core.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
 
-        .navbar-custom .navbar-text {
-            color: #333;
-            font-weight: 500;
-        }
-    </style>
+    <!-- Vendors CSS -->
+
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
+
+    <!-- endbuild -->
+
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/apex-charts/apex-charts.css') }}" />
+
+    <!-- Page CSS -->
+
+    <!-- Helpers -->
+    <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+
+    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+
+    <script src="{{ asset('assets/js/config.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
-    <!-- Sidebar -->
-    <nav id="sidebar" class="d-flex flex-column">
-        <div class="text-center mb-4">
-            <h4 class="text-dark">Admin Kantin</h4>
-        </div>
-        <ul class="nav flex-column px-2">
-            <li class="nav-item">
-                <a href="{{ route('tenants.admin') }}" class="nav-link @if(request()->routeIs('tenants.admin')) active @endif">
-                    Manajemen Tenant
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link disabled" tabindex="-1" aria-disabled="true">
-                    Manajemen Porter (Coming Soon)
-                </a>
-            </li>
-        </ul>
-    </nav>
 
-    <!-- Main content -->
-    <div id="main-content">
-        <!-- Navbar atas -->
-        <nav class="navbar navbar-expand navbar-custom">
-            <div class="container-fluid justify-content-end p-1">
-                <span class="navbar-text d-flex align-items-center">
-                    <i class="bi bi-person-circle fs-5 me-3"></i> Admin 1
-                </span>
+    @if (isset($viewLogin))
+        @yield('content')
+    @else
+        <!-- Layout wrapper -->
+        <div class="layout-wrapper layout-content-navbar">
+            <div class="layout-container">
+                <!-- Menu -->
+                @include('layouts.sidebar')
+                <!-- / Menu -->
+
+                <!-- Layout container -->
+                <div class="layout-page">
+                    <!-- Navbar -->
+                    @include('layouts.navbar')
+                    <!-- / Navbar -->
+
+                    <!-- Content wrapper -->
+                    <div class="content-wrapper">
+                        <!-- Content -->
+                        <div class="container-xxl flex-grow-1 container-p-y">
+                            @yield('content')
+                        </div>
+                        <!-- / Content -->
+
+                        <!-- Footer -->
+                        <!-- / Footer -->
+
+                        <div class="content-backdrop fade"></div>
+                    </div>
+                    <!-- Content wrapper -->
+                </div>
+                <!-- / Layout page -->
             </div>
-        </nav>
 
-        <!-- Page content -->
-        <main class="p-4">
-            @yield('content')
-        </main>
-    </div>
+            <!-- Overlay -->
+            <div class="layout-overlay layout-menu-toggle"></div>
+        </div>
+    @endif
 
-    <!-- Bootstrap Bundle JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    @stack('scripts')
+    <!-- / Layout wrapper -->
+
+    <!-- Core JS -->
+
+    <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
+
+    <script src="{{ asset('assets/vendor/libs/popper/popper.js') }}"></script>
+    <script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
+
+    <script src="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js') }}"></script>
+
+    <script src="{{ asset('assets/vendor/js/menu.js') }}"></script>
+
+    <!-- endbuild -->
+
+    <!-- Vendors JS -->
+    <script src="{{ asset('assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
+
+    <!-- Main JS -->
+
+    <script src="{{ asset('assets/js/main.js') }}"></script>
+
+    @if (session('success') || session('error'))
+        @php
+            $title = session('success') ? 'success' : 'error';
+            $message = session('success') ? session('success') : session('error');
+
+            session()->forget(['success', 'error']);
+        @endphp
+
+        <script>
+            Swal.fire({
+                title: '{{ ucfirst($title) }}',
+                text: "{{ $message }}",
+                icon: '{{ $title }}',
+                confirmButtonColor: '#435ebe',
+                confirmButtonText: 'Done',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.reload();
+                }
+            });
+        </script>
+    @endif
 </body>
+
 </html>
