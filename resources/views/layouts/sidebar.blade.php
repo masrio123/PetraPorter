@@ -16,80 +16,14 @@
             "roles" => ["superAdmin", "admin"],
             "sub" => [
                 [
-                    "label" => "Pelanggan",
+                    "label" => "Tenant",
                     "route" => null
                 ],
                 [
-                    "label" => "Karyawan",
+                    "label" => "Product",
                     "route" => null
                 ],
-                [
-                    "label" => "Supplier",
-                    "route" => null
-                ],
-                [
-                    "label" => "Barang",
-                    "route" => null
-                ],
-                [
-                    "label" => "Salesmen",
-                    "route" => null
-                ],
-            ]
-        ],
-        [
-            "label" => "Transaksi",
-            "icons" => "bx bx-wallet",
-            "roles" => ["superAdmin", "admin", "karyawan"],
-            "sub" => [
-                [
-                    "label" => "Penjualan",
-                    "route" => null
-                ],
-                [
-                    "label" => "Pembelian",
-                    "route" => null
-                ],
-                [
-                    "label" => "Return Barang",
-                    "route" => null
-                ], 
-                [
-                    "label" => "Pengeluaran",
-                    "route" => null
-                ],
-            ]
-        ],
-        [
-            "label" => "Laporan",
-            "icons" => "bx bxs-report",
-            "roles" => ["superAdmin", "admin", "karyawan"],
-            "sub" => [
-                [
-                    "label" => "Penjualan",
-                    "role" => ["superAdmin", "admin"],
-                    "route" => null
-                ],
-                [
-                    "label" => "Pembelian",
-                    "route" => null
-                ],
-                [
-                    "label" => "Laba Barang",
-                    "route" => null
-                ],
-                [
-                    "label" => "Pemindahan Barang",
-                    "route" => null
-                ],
-                [
-                    "label" => "Pembayaran Supplier",
-                    "route" => null
-                ],
-                [
-                    "label" => "Stok Opname",
-                    "route" => null
-                ],
+              
             ]
         ],
         [
@@ -109,7 +43,7 @@
     <div class="app-brand demo">
         <a href="index.html" class="app-brand-link" style="display: block">
             <div class="app-brand-text demo menu-text fw-bold ms-2" style="display: block">
-                AJM 
+                Petra Porter 
             </div>
         </a> 
         <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">

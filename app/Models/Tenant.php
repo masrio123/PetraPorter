@@ -18,9 +18,4 @@ class Tenant extends Model
     protected $casts = [
         'isOpen' => 'boolean',
     ];
-
-    public function location()
-    {
-        return $this->belongsTo(TenantLocation::class, 'tenant_location_id');
-    }
 }

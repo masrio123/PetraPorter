@@ -2,29 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tenant;
 use Illuminate\Http\Request;
 
-class TenantController extends Controller
+class DashboardController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $tenants = Tenant::select([
-            "tenants.id",
-            "tenants.name",
-            "tenant_locations.location_name as location",
-            "tenants.isOpen",
-        ])
-            ->join('tenant_locations', 'tenants.tenant_location_id', '=','tenant_locations.id')
-            ->get();
-
-        return view("dashboard.tenant.index", [
-            'tenants'=>$tenants
-    
-        ]);
+        return view("dashboard.index");
     }
 
     /**
