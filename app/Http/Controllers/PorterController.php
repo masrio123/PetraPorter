@@ -4,66 +4,78 @@ namespace App\Http\Controllers;
 
 use App\Models\Porter;
 use Illuminate\Http\Request;
+use App\Models\Department;
 
 class PorterController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-   public function index()
+    public function index()
     {
         $porters = Porter::all();
-        return view("dashboard.porter.index", [
-            'porters'=>$porters,
-    
-        ]);
+        return view('dashboard.porter.index', compact('porters'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $departments = Department::all();
+        return view('dashboard.porter.create', compact('departments'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'porter_name' => 'required|string|max:255',
+            'porter_nrp' => 'required|string|max:50|unique:porters,porter_nrp',
+            'department_id' => 'required|integer',
+            'porter_account_number' => 'required|string|max:100',
+            'porter_rating' => 'nullable|numeric|min:0|max:5',
+            'porter_isOnline' => 'required|boolean',
+        ]);
+
+        Porter::create($request->all());
+
+        return redirect()->route('dashboard.porters.index')->with('success', 'Porter berhasil ditambahkan.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
-        //
+        // Ambil porter beserta field department_id
+        $porter = Porter::select(
+            'id',
+            'porter_name',
+            'porter_nrp',
+            'department_id',
+            'porter_account_number',
+            'porter_rating',
+            'porter_isOnline'
+        )->findOrFail($id);
+
+        $departments = Department::all();
+
+        return view('dashboard.porter.edit', compact('porter', 'departments'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'porter_name' => 'required|string|max:255',
+            'porter_nrp' => 'required|string|max:50|unique:porters,porter_nrp,' . $id,
+            'department_id' => 'required|integer',
+            'porter_account_number' => 'required|string|max:100',
+            'porter_rating' => 'nullable|numeric|min:0|max:5',
+            'porter_isOnline' => 'required|boolean',
+        ]);
+
+        $porter = Porter::findOrFail($id);
+        $porter->update($request->all());
+
+        return redirect()->route('dashboard.porters.index')->with('success', 'Porter berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        //
+        $porter = Porter::findOrFail($id);
+        $porter->delete();
+
+        return redirect()->route('dashboard.porters.index')->with('success', 'Porter berhasil dihapus.');
     }
 }

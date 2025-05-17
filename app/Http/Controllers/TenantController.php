@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tenant;
+use App\Models\TenantLocation;
 use Illuminate\Http\Request;
 
 class TenantController extends Controller
@@ -18,12 +19,12 @@ class TenantController extends Controller
             "tenant_locations.location_name as location",
             "tenants.isOpen",
         ])
-            ->join('tenant_locations', 'tenants.tenant_location_id', '=','tenant_locations.id')
+            ->join('tenant_locations', 'tenants.tenant_location_id', '=', 'tenant_locations.id')
             ->get();
 
         return view("dashboard.tenant.index", [
-            'tenants'=>$tenants
-    
+            'tenants' => $tenants
+
         ]);
     }
 
@@ -32,7 +33,10 @@ class TenantController extends Controller
      */
     public function create()
     {
-        //
+        $tenantLocations = TenantLocation::all();
+        return view('dashboard.tenant.create', [
+            'tenantLocations' => $tenantLocations
+        ]);
     }
 
     /**
@@ -40,15 +44,37 @@ class TenantController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Validasi input dari form
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'tenant_location_id' => 'required|exists:tenant_locations,id',
+            'isOpen' => 'required|boolean',
+        ]);
+
+        // Simpan data ke database
+        Tenant::create([
+            'name' => $request->name,
+            'tenant_location_id' => $request->tenant_location_id,
+            'isOpen' => $request->isOpen,
+        ]);
+
+        // Redirect kembali ke halaman index tenant
+        return redirect()->route('dashboard.tenants.index')->with('success', 'Tenant berhasil ditambahkan.');
     }
 
     /**
      * Display the specified resource.
      */
+    /**
+     * Display the specified resource.
+     */
     public function show(string $id)
     {
-        //
+        $tenant = Tenant::with('location')->findOrFail($id);
+
+        return view('dashboard.tenant.show', [
+            'tenant' => $tenant,
+        ]);
     }
 
     /**
@@ -56,7 +82,13 @@ class TenantController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $tenant = Tenant::findOrFail($id);
+        $tenantLocations = TenantLocation::all();
+
+        return view('dashboard.tenant.edit', [
+            'tenant' => $tenant,
+            'tenantLocations' => $tenantLocations,
+        ]);
     }
 
     /**
@@ -64,7 +96,20 @@ class TenantController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'tenant_location_id' => 'required|exists:tenant_locations,id',
+            'isOpen' => 'required|boolean',
+        ]);
+
+        $tenant = Tenant::findOrFail($id);
+        $tenant->update([
+            'name' => $request->name,
+            'tenant_location_id' => $request->tenant_location_id,
+            'isOpen' => $request->isOpen,
+        ]);
+
+        return redirect()->route('dashboard.tenants.index')->with('success', 'Tenant berhasil diperbarui.');
     }
 
     /**
@@ -72,6 +117,9 @@ class TenantController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $tenant = Tenant::findOrFail($id);
+        $tenant->delete();
+
+        return redirect()->route('dashboard.tenants.index')->with('success', 'Tenant berhasil dihapus.');
     }
 }
