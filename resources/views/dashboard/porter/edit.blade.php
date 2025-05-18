@@ -4,7 +4,14 @@
     <div class="container mt-4">
         <div class="row">
             <div class="col-12 card card-body">
-                <h3 class="mb-4">Edit Porter</h3>
+
+                {{-- Header dengan tombol back dan judul tanpa border bawah --}}
+                <div class="d-flex align-items-center gap-3 mb-4 border-bottom-0">
+                    <a href="{{ route('dashboard.porters.index') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <h3 class="mb-0">Edit Porter</h3>
+                </div>
 
                 {{-- Alert Error --}}
                 @if ($errors->any())
@@ -35,22 +42,20 @@
                             value="{{ old('porter_nrp', $porter->porter_nrp) }}">
                     </div>
 
-                   <div class="mb-3">
-    <label for="department_id" class="form-label">Departemen</label>
-    <select name="department_id" id="department_id" class="form-select" required>
-        <option disabled {{ empty(old('department_id', $porter->department_id ?? null)) ? 'selected' : '' }}>
-            -- Pilih Departemen --
-        </option>
-        @foreach ($departments as $department)
-            <option value="{{ $department->id }}"
-                {{ (int) old('department_id', $porter->department_id) === $department->id ? 'selected' : '' }}>
-                {{ $department->department_name }}
-            </option>
-        @endforeach
-    </select>
-</div>
-
-
+                    <div class="mb-3">
+                        <label for="department_id" class="form-label">Departemen</label>
+                        <select name="department_id" id="department_id" class="form-select" required>
+                            <option disabled {{ empty(old('department_id', $porter->department_id ?? null)) ? 'selected' : '' }}>
+                                -- Pilih Departemen --
+                            </option>
+                            @foreach ($departments as $department)
+                                <option value="{{ $department->id }}"
+                                    {{ (int) old('department_id', $porter->department_id) === $department->id ? 'selected' : '' }}>
+                                    {{ $department->department_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
                     <div class="mb-3">
                         <label for="porter_account_number" class="form-label">Nomor Rekening</label>
@@ -69,8 +74,8 @@
                             </option>
                         </select>
                     </div>
-                    <br>
-                    <button type="submit" class="btn btn-primary w-45">Simpan Perubahan</button>
+
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                 </form>
             </div>
         </div>

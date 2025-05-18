@@ -4,7 +4,14 @@
     <div class="container mt-4">
         <div class="row">
             <div class="col-12 card card-body">
-                <h3 class="mb-4">Tambah Porter</h3>
+
+                {{-- Header dengan tombol back dan judul tanpa border bawah --}}
+                <div class="d-flex align-items-center gap-3 mb-4 border-bottom-0">
+                    <a href="{{ route('dashboard.porters.index') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <h3 class="mb-0">Tambah Porter</h3>
+                </div>
 
                 {{-- Alert Error --}}
                 @if ($errors->any())
@@ -37,11 +44,10 @@
                     <div class="mb-3">
                         <label for="department_id" class="form-label">Departemen</label>
                         <select name="department_id" id="department_id" class="form-select" required>
-                            <option disabled {{ old('department_id', $porter->department_id ?? '') ? '' : 'selected' }}>--
-                                Pilih Departemen --</option>
+                            <option disabled {{ old('department_id') ? '' : 'selected' }}>-- Pilih Departemen --</option>
                             @foreach ($departments as $department)
                                 <option value="{{ $department->id }}"
-                                    {{ old('department_id', $porter->department_id ?? '') == $department->id ? 'selected' : '' }}>
+                                    {{ old('department_id') == $department->id ? 'selected' : '' }}>
                                     {{ $department->department_name }}
                                 </option>
                             @endforeach
@@ -68,7 +74,7 @@
         </div>
     </div>
 
-    {{-- Modal sukses --}}
+    {{-- Pop up sukses --}}
     @if (session()->has('success'))
         <div class="modal fade show" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-modal="true"
             style="display: block; background-color: rgba(0,0,0,0.5);">

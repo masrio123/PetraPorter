@@ -34,7 +34,7 @@
                             <td class="text-center">{{ $porter->porter_account_number }}</td>
                             <td class="text-center">{{ $porter->porter_rating }}</td>
                             <td class="text-center">
-                                @if ($porter->isOnline)
+                                @if ($porter->porter_isOnline)
                                     <span class="badge bg-success rounded-pill px-3 py-2">
                                         <i class="fas fa-door-open me-1"></i> Online
                                     </span>

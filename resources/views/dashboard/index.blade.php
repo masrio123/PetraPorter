@@ -2,6 +2,7 @@
 
 @section('content')
     <div class="row">
+        <h3 class="mb-4">Admin Dashboard</h3>
         <div class="col-6">
             <div class="card card-body">
                 <div class="card-title d-flex align-items-start justify-content-between mb-4">
@@ -9,8 +10,8 @@
                         <img src="../assets/img/icons/unicons/chart-success.png" alt="chart success" class="rounded">
                     </div>
                     <div class="dropdown">
-                        <button class="btn p-0" type="button" id="cardOpt3" data-bs-toggle="dropdown"
-                            aria-haspopup="true" aria-expanded="false">
+                        <button class="btn p-0" type="button" id="cardOpt3" data-bs-toggle="dropdown" aria-haspopup="true"
+                            aria-expanded="false">
                             <i class="icon-base bx bx-dots-vertical-rounded text-body-secondary"></i>
                         </button>
                     </div>
@@ -27,8 +28,8 @@
                         <img src="../assets/img/icons/unicons/chart-success.png" alt="chart success" class="rounded">
                     </div>
                     <div class="dropdown">
-                        <button class="btn p-0" type="button" id="cardOpt3" data-bs-toggle="dropdown"
-                            aria-haspopup="true" aria-expanded="false">
+                        <button class="btn p-0" type="button" id="cardOpt3" data-bs-toggle="dropdown" aria-haspopup="true"
+                            aria-expanded="false">
                             <i class="icon-base bx bx-dots-vertical-rounded text-body-secondary"></i>
                         </button>
                     </div>
