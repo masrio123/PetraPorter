@@ -1,13 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en" class="layout-menu-fixed layout-compact" data-assets-path="../assets/" data-template="vertical-menu-template-free">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
 
     <title>@yield('title', 'Petra Porter')</title>
-
     <meta name="description" content="" />
 
     <!-- Favicon -->
@@ -32,13 +32,19 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/apex-charts/apex-charts.css') }}" />
 
     <!-- Helpers -->
-    <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
+    <script src="{{ asset('assets/vendor/js/helpers.js') }}" defer></script>
 
     <!-- Config: theme -->
-    <script src="{{ asset('assets/js/config.js') }}"></script>
+    <script src="{{ asset('assets/js/config.js') }}" defer></script>
 
     <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
+
+    <style>
+        body {
+            background-color: #ffffff !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -61,7 +67,7 @@
                     <!-- Content wrapper -->
                     <div class="content-wrapper">
                         <!-- Main content -->
-                        <div class="container-xxl flex-grow-1 container-p-y">
+                        <div class="container-xxl flex-grow-1 container-p-y bg-white">
                             @yield('content')
                         </div>
                         <!-- /Main content -->
@@ -98,25 +104,23 @@
     {{-- Yield untuk script halaman khusus --}}
     @yield('scripts')
 
-    {{-- SweetAlert2 untuk flash message --}}
+    {{-- SweetAlert2 flash message --}}
     @if (session('success') || session('error'))
         @php
             $title = session('success') ? 'success' : 'error';
-            $message = session('success') ? session('success') : session('error');
+            $message = session('success') ?? session('error');
             session()->forget(['success', 'error']);
         @endphp
 
         <script>
-            Swal.fire({
-                title: '{{ ucfirst($title) }}',
-                text: "{{ $message }}",
-                icon: '{{ $title }}',
-                confirmButtonColor: '#435ebe',
-                confirmButtonText: 'Done',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.reload();
-                }
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    title: '{{ ucfirst($title) }}',
+                    text: "{{ $message }}",
+                    icon: '{{ $title }}',
+                    confirmButtonColor: '#435ebe',
+                    confirmButtonText: 'Done',
+                });
             });
         </script>
     @endif
