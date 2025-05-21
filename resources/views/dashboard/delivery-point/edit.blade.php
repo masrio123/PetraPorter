@@ -7,10 +7,10 @@
 
                 {{-- Header dengan tombol back dan judul tanpa border bawah --}}
                 <div class="d-flex align-items-center gap-5 mb-4 border-bottom-0">
-                    <a href="{{ route('dashboard.tenants.index') }}" class="btn btn-outline-secondary btn-sm">
+                    <a href="{{ route('dashboard.delivery-points.index') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-arrow-left"></i>
                     </a>
-                    <h3 class="mb-0"><strong>Edit Tenant</strong></h3>
+                    <h3 class="mb-0"><strong>Edit Delivery Point</strong></h3>
                 </div>
 
                 {{-- Alert Error --}}
@@ -25,41 +25,19 @@
                     </div>
                 @endif
 
-                {{-- Form Edit Tenant --}}
-                <form action="{{ route('dashboard.tenants.update', $tenant->id) }}" method="POST">
+                {{-- Form Edit Delivery Point --}}
+                <form action="{{ route('dashboard.delivery-points.update', $delivery_point->id) }}" method="POST">
                     @csrf
                     @method('PUT')
 
-                    <div class="mb-3">
-                        <label for="tenant_name" class="form-label">Nama Tenant</label>
-                        <input type="text" name="name" id="tenant_name" class="form-control" required
-                            value="{{ old('name', $tenant->name) }}">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="tenant_location_id" class="form-label">Lokasi</label>
-                        <select name="tenant_location_id" id="tenant_location_id" class="form-select" required>
-                            <option disabled {{ empty(old('tenant_location_id', $tenant->tenant_location_id ?? null)) ? 'selected' : '' }}>
-                                -- Pilih Lokasi --
-                            </option>
-                            @foreach ($tenantLocations as $location)
-                                <option value="{{ $location->id }}" 
-                                    {{ (int) old('tenant_location_id', $tenant->tenant_location_id) === $location->id ? 'selected' : '' }}>
-                                    {{ $location->location_name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
                     <div class="mb-6">
-                        <label for="isOpen" class="form-label">Status</label>
-                        <select name="isOpen" id="isOpen" class="form-select" required>
-                            <option value="1" {{ old('isOpen', $tenant->isOpen) == 1 ? 'selected' : '' }}>Buka</option>
-                            <option value="0" {{ old('isOpen', $tenant->isOpen) == 0 ? 'selected' : '' }}>Tutup</option>
-                        </select>
+                        <label for="delivery_point_name" class="form-label">Nama Delivery Point</label>
+                        <input type="text" name="delivery_point_name" id="delivery_point_name" class="form-control"
+                            required value="{{ old('delivery_point_name', $delivery_point->delivery_point_name) }}">
                     </div>
 
-                    <button type="submit" class="btn text-white" style="background-color: #ff7622">Simpan Perubahan</button>
+                    <button type="submit" class="btn text-white" style="background-color: #ff7622">Simpan
+                        Perubahan</button>
                 </form>
             </div>
         </div>

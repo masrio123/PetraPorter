@@ -6,11 +6,11 @@
             <div class="col-12 card card-body">
 
                 {{-- Header dengan tombol back dan judul tanpa border bawah --}}
-                <div class="d-flex align-items-center gap-3 mb-4 border-bottom-0">
+                <div class="d-flex align-items-center gap-5 mb-4 border-bottom-0">
                     <a href="{{ route('dashboard.tenants.index') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-arrow-left"></i>
                     </a>
-                    <h3 class="mb-0">Tambah Tenant</h3>
+                    <h3 class="mb-0"><strong>Tambah Tenant</strong></h3>
                 </div>
 
                 {{-- Alert Error (Bootstrap alert-danger) --}}
@@ -54,7 +54,7 @@
                         </select>
                     </div>
                     <br>
-                    <button type="submit" class="btn btn-primary w-45">Tambah</button>
+                    <button type="submit" class="btn text-white" style="background-color: #ff7622;"">Tambah</button>
                 </form>
             </div>
         </div>

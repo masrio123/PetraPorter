@@ -10,7 +10,7 @@
                     <a href="{{ route('dashboard.porters.index') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-arrow-left"></i>
                     </a>
-                    <h3 class="mb-0">Edit Porter</h3>
+                    <h3 class="mb-0"><strong>Edit Porter</strong></h3>
                 </div>
 
                 {{-- Alert Error --}}
@@ -75,7 +75,7 @@
                         </select>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                    <button type="submit" class="btn text-white" style="background-color: #ff7622">Simpan Perubahan</button>
                 </form>
             </div>
         </div>

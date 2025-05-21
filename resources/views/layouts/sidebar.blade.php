@@ -1,17 +1,9 @@
 @php
     $menus = [
         [
-            'type' => 'divider',
-            'label' => 'Home',
-        ],
-        [
             'label' => 'Dashboard',
             'icons' => 'bx bx-home',
             'route' => 'dashboard.index',
-        ],
-        [
-            'type' => 'divider',
-            'label' => 'Manajemen',
         ],
         [
             'label' => 'Tenant Management',
@@ -22,6 +14,11 @@
             'label' => 'Porter Management',
             'icons' => 'bx bx-user',
             'route' => 'dashboard.porters.index',
+        ],
+         [
+            'label' => 'Delivery Point',
+            'icons' => 'bx bx-map',
+            'route' => 'dashboard.delivery-points.index',
         ],
         [
             'type' => 'divider',
@@ -41,7 +38,7 @@
         <img src="{{ asset('assets/img/logo.png') }}" alt="Logo Petra Porter" style="height: 145px; width: auto;" />
     </div>
 
-    <ul class="menu-inner py-1 flex-grow-1" style="margin-top: -40px; margin-bottom: 1px;">
+    <ul class="menu-inner py-7 flex-grow-1" style="margin-top: -40px; margin-bottom: 1px;">
         @foreach ($menus as $menu)
             @if (isset($menu['type']) && $menu['type'] === 'divider')
                 <li class="menu-header small text-uppercase">

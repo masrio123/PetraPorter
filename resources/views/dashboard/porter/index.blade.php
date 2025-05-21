@@ -2,13 +2,14 @@
 
 @section('content')
     <div class="container">
-        <h3 class="mb-4">Porter Management</h3>
+        <h3 class="mb-4"><strong>Porter Management</strong></h3>
 
         <div class="mb-4">
-            <a href="{{ route('dashboard.porters.create') }}" class="btn btn-primary">
+            <a href="{{ route('dashboard.porters.create') }}" class="btn text-white" style="background-color: #ff7622;">
                 Tambah Porter
             </a>
         </div>
+
 
         <div class="card card-body shadow-sm overflow-auto">
             <table class="table table-bordered table-hover align-middle">
@@ -35,29 +36,33 @@
                             <td class="text-center">{{ $porter->porter_rating }}</td>
                             <td class="text-center">
                                 @if ($porter->porter_isOnline)
-                                    <span class="badge bg-success rounded-pill px-3 py-2">
-                                        <i class="fas fa-door-open me-1"></i> Online
+                                    <span class="d-inline-flex align-items-center gap-2 text-success fw-semibold">
+                                        <span class="rounded-circle"
+                                            style="width: 10px; height: 10px; background-color: #28a745;"></span>
+                                        Online
                                     </span>
                                 @else
-                                    <span class="badge bg-danger rounded-pill px-3 py-2">
-                                        <i class="fas fa-door-closed me-1"></i> Offline
+                                    <span class="d-inline-flex align-items-center gap-2 text-danger fw-semibold">
+                                        <span class="rounded-circle"
+                                            style="width: 10px; height: 10px; background-color: #dc3545;"></span>
+                                        Offline
                                     </span>
                                 @endif
                             </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-2">
-                                    {{-- Edit Button --}}
+                                    {{-- Edit --}}
                                     <a href="{{ route('dashboard.porters.edit', $porter->id) }}"
-                                        class="btn btn-primary d-flex align-items-center justify-content-center px-3 py-1 rounded-pill"
-                                        style="height: 32px;">
+                                        class="btn text-white d-flex align-items-center justify-content-center px-3 py-3"
+                                        style="height: 32px; background-color: blue;">
                                         <i class="fas fa-pen me-1" style="font-size: 0.85rem;"></i>
                                         <span style="font-size: 0.85rem;">Edit</span>
                                     </a>
 
-                                    {{-- Delete Trigger Button --}}
+                                    {{-- Hapus --}}
                                     <button type="button"
-                                        class="btn btn-danger d-flex align-items-center justify-content-center px-3 py-1 rounded-pill"
-                                        style="height: 32px;" data-bs-toggle="modal"
+                                        class="btn text-white d-flex align-items-center justify-content-center px-3 py-3"
+                                        style="height: 32px; background-color: red;" data-bs-toggle="modal"
                                         data-bs-target="#deleteModal{{ $porter->id }}">
                                         <i class="fas fa-trash me-1" style="font-size: 0.85rem;"></i>
                                         <span style="font-size: 0.85rem;">Hapus</span>
@@ -77,8 +82,8 @@
                                         </div>
                                         <h5 class="fw-bold mb-3">Hapus Porter</h5>
                                         <p class="mb-4">
-                                            Apakah Anda yakin ingin menghapus porter
-                                            <strong>{{ $porter->porter_name }}</strong>? Tindakan ini tidak dapat
+                                            Apakah Anda yakin ingin menghapus porter <br>
+                                            <strong>{{ $porter->porter_name }}</strong>? <br> Tindakan ini tidak dapat
                                             dibatalkan.
                                         </p>
                                         <div class="d-flex justify-content-center gap-3">

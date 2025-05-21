@@ -10,7 +10,7 @@
                     <a href="{{ route('dashboard.porters.index') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-arrow-left"></i>
                     </a>
-                    <h3 class="mb-0">Tambah Porter</h3>
+                    <h3 class="mb-0"><strong>Tambah Porter</strong></h3>
                 </div>
 
                 {{-- Alert Error --}}
@@ -68,7 +68,7 @@
                         </select>
                     </div>
                     <br>
-                    <button type="submit" class="btn btn-primary w-45">Tambah</button>
+                    <button type="submit" class="btn text-white w-45" style="background-color: #ff7622">Tambah</button>
                 </form>
             </div>
         </div>

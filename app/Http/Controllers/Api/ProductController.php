@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Controller;
+use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
@@ -37,44 +39,109 @@ class ProductController extends Controller
         ]);
     }
 
-    public function storeProduct(Request $request): JsonResponse
+    public function getProductByTenant($id)
     {
-        $validated = $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string',
-            'price' => 'required|numeric',
-            'isAvailable' => 'required|boolean',
-        ]);
+        $products = Product::select([
+            'products.id',
+            'products.name as product_name',
+            'products.price',
+            'c.category_name',
+            't.name as tenant',
+            'products.isAvailable',
+        ])
+            ->join('categories as c', 'products.category_id', '=', 'c.id')
+            ->join('tenants as t', 'products.tenant_id', '=', 't.id')
+            ->where('t.id', $id)
+            ->get();
 
-        $product = Product::create($validated);
-        $product->load('category'); // penting agar categoryName bisa dikembalikan
+        $data = array();
+
+        foreach ($products as $product) {
+            if (!isset($data[$product['category_name']])) {
+                $data[$product['category_name']] = [];
+            }
+
+            $data[$product['category_name']][] = $product;
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Product added successfully',
-            'data' => $product
+            'message' => 'Products grouped by tenants',
+            'data' => $data
         ]);
+    }
+
+    public function storeProduct(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'category_id'  => 'required|exists:categories,id',
+                'tenant_id'    => 'required|exists:tenants,id',
+                'name'         => 'required|string|max:255',
+                'price'        => 'required|numeric|min:0',
+                'isAvailable'  => 'required|boolean',
+            ]);
+
+            $product = Product::create($validated);
+            $product->load('category');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product added successfully',
+                'data'    => $product
+            ], 201);
+        } catch (ValidationException $e) {
+            // Tangani kesalahan validasi
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            // Tangani error umum
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong',
+                'error'   => $e->getMessage(), // hilangkan ini di production jika sensitif
+            ], 500);
+        }
     }
 
     public function updateProduct(Request $request, $id): JsonResponse
     {
-        $product = Product::findOrFail($id);
+        try {
+            $product = Product::findOrFail($id);
 
-        $validated = $request->validate([
-            'name' => 'sometimes|string',
-            'price' => 'sometimes|numeric',
-            'isAvailable' => 'sometimes|boolean',
-            'category_id' => 'sometimes|exists:categories,id',
-        ]);
+            $validated = $request->validate([
+                'name' => 'sometimes|string',
+                'price' => 'sometimes|numeric',
+                'tenant_id'    => 'required|exists:tenants,id',
+                'isAvailable' => 'sometimes|boolean',
+                'category_id' => 'sometimes|exists:categories,id',
+            ]);
+            $product->update($validated);
+            $product->load('category');
 
-        $product->update($validated);
-        $product->load('category');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Product updated successfully',
-            'data' => $product
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Product updated successfully',
+                'data' => $product
+            ]);
+        } catch (ValidationException $e) {
+            // Tangani kesalahan validasi
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            // Tangani error umum
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong',
+                'error'   => $e->getMessage(), // hilangkan ini di production jika sensitif
+            ], 500);
+        }
     }
 
 

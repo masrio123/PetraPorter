@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('porter_name');
             $table->string('porter_nrp');
             $table->foreignId('department_id')->constrained('departments');
-            $table->string('porter_account_number');
             $table->string('porter_rating')->default('null');
             $table->boolean('porter_isOnline')->default(true);
             $table->timestamps();
