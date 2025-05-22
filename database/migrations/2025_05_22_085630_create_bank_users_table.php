@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('porters', function (Blueprint $table) {
-            $table->foreignId('bank_user_id')->after('department_id')->constrained('bank_users');
+        Schema::create('bank_users', function (Blueprint $table) {
+            $table->id();
+            $table->string('username');
+            $table->string('account_number');
+            $table->foreignId('bank_id')->constrained('banks');
+            $table->timestamps();
         });
     }
 
@@ -21,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('porters', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('bank_users');
     }
 };

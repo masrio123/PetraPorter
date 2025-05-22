@@ -10,7 +10,7 @@ use App\Http\Controllers\Api\ProductController as ApiProductController;
 
 Route::get('/products', [ApiProductController::class,'fetchAllProducts']);
 Route::get('/products/{id}', [ApiProductController::class,'getProductByTenant']);
-Route::put('/products/toggle/{id}', [ApiProductController::class,'toggleAvailability ']);
+Route::put('/products/toggle/{id}', [ApiProductController::class,'toggleAvailability']);
 Route::post('/products/store', [ApiProductController::class, 'storeProduct']);
 Route::put('products/{id}/edit', [ApiProductController::class, 'updateProduct']);
 Route::delete('products/{id}/delete', [ApiProductController::class, 'deleteProduct']);

@@ -3,77 +3,81 @@
 namespace App\Http\Controllers;
 
 use App\Models\Porter;
-use Illuminate\Http\Request;
 use App\Models\Department;
+use App\Models\BankUser;
+use Illuminate\Http\Request;
 
 class PorterController extends Controller
 {
+    // Tampilkan daftar porter
     public function index()
     {
-        $porters = Porter::all();
+        // Pastikan timeout_until di-cast ke Carbon di model Porter untuk format isFuture() (opsional)
+        $porters = Porter::with(['department', 'bankUser.bank'])->get();
+
         return view('dashboard.porter.index', compact('porters'));
     }
 
+    // Form tambah porter
     public function create()
     {
         $departments = Department::all();
-        return view('dashboard.porter.create', compact('departments'));
+        $bankUsers = BankUser::with('bank')->get();
+
+        return view('dashboard.porter.create', compact('departments', 'bankUsers'));
     }
 
+    // Simpan porter baru
     public function store(Request $request)
     {
         $request->validate([
             'porter_name' => 'required|string|max:255',
             'porter_nrp' => 'required|string|max:50|unique:porters,porter_nrp',
-            'department_id' => 'required|integer',
-            'porter_account_number' => 'required|string|max:100',
-            'porter_rating' => 'nullable|numeric|min:0|max:5',
+            'department_id' => 'required|integer|exists:departments,id',
+            'bank_user_id' => 'required|integer|exists:bank_users,id',
             'porter_isOnline' => 'required|boolean',
         ]);
 
-        Porter::create($request->all());
+        $bankUser = BankUser::findOrFail($request->bank_user_id);
+
+        // Validasi: nama harus sama dengan username rekening
+        if ($request->porter_name !== $bankUser->username) {
+            return back()
+                ->withErrors(['porter_name' => 'Nama porter harus sama dengan username rekening yang dipilih.'])
+                ->withInput();
+        }
+
+        // Validasi: bank_user_id tidak boleh digunakan oleh porter lain
+        if (Porter::where('bank_user_id', $request->bank_user_id)->exists()) {
+            return back()
+                ->withErrors(['bank_user_id' => 'Rekening ini sudah digunakan oleh porter lain.'])
+                ->withInput();
+        }
+
+        Porter::create([
+            'porter_name' => $request->porter_name,
+            'porter_nrp' => $request->porter_nrp,
+            'department_id' => $request->department_id,
+            'bank_user_id' => $request->bank_user_id,
+            'porter_account_number' => $bankUser->account_number,
+            'porter_isOnline' => $request->porter_isOnline,
+        ]);
 
         return redirect()->route('dashboard.porters.index')->with('success', 'Porter berhasil ditambahkan.');
     }
 
-    public function edit(string $id)
+    // Fungsi timeout (blacklist porter selama 2 hari)
+    public function timeout(Porter $porter)
     {
-        // Ambil porter beserta field department_id
-        $porter = Porter::select(
-            'id',
-            'porter_name',
-            'porter_nrp',
-            'department_id',
-            'porter_account_number',
-            'porter_rating',
-            'porter_isOnline'
-        )->findOrFail($id);
+        $porter->timeout_until = now()->addDays(2);
+        $porter->save();
 
-        $departments = Department::all();
-
-        return view('dashboard.porter.edit', compact('porter', 'departments'));
+        return redirect()->route('dashboard.porters.index')->with('success', 'Porter telah di-timeout selama 2 hari.');
     }
 
-    public function update(Request $request, string $id)
+    // Hapus porter
+    public function destroy(Porter $porter)
     {
-        $request->validate([
-            'porter_name' => 'required|string|max:255',
-            'porter_nrp' => 'required|string|max:50|unique:porters,porter_nrp,' . $id,
-            'department_id' => 'required|integer',
-            'porter_account_number' => 'required|string|max:100',
-            'porter_rating' => 'nullable|numeric|min:0|max:5',
-            'porter_isOnline' => 'required|boolean',
-        ]);
-
-        $porter = Porter::findOrFail($id);
-        $porter->update($request->all());
-
-        return redirect()->route('dashboard.porters.index')->with('success', 'Porter berhasil diperbarui.');
-    }
-
-    public function destroy(string $id)
-    {
-        $porter = Porter::findOrFail($id);
         $porter->delete();
 
         return redirect()->route('dashboard.porters.index')->with('success', 'Porter berhasil dihapus.');

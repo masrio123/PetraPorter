@@ -2,17 +2,17 @@
 
 namespace Database\Seeders;
 
+use App\Models\Bank;
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Porter;
 use App\Models\Tenant;
 use App\Models\Product;
+use App\Models\BankUser;
 use App\Models\Category;
 use App\Models\Department;
 use App\Models\DeliveryPoint;
 use App\Models\TenantLocation;
 use Illuminate\Database\Seeder;
-
-
 
 class DatabaseSeeder extends Seeder
 {
@@ -21,14 +21,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seed Tenant Locations
         $locations = ["P", "Q", "W", "T"];
-
         foreach ($locations as $location) {
             TenantLocation::create([
                 "location_name" => 'Gedung ' . $location
             ]);
         }
 
+        // Seed Tenants
         $tenants = [
             "Kobakso",
             "Bakpao Gracias",
@@ -43,7 +44,6 @@ class DatabaseSeeder extends Seeder
             "Pangsit Mie Tenda Biru",
             "Singapore Crispy Snacks"
         ];
-
         foreach ($tenants as $tenant) {
             Tenant::create([
                 "name" => $tenant,
@@ -52,6 +52,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        // Seed Categories & Products
         $categories = [
             [
                 'name' => 'Makanan Pedas',
@@ -114,14 +115,11 @@ class DatabaseSeeder extends Seeder
                 'menus' => ['Gado-Gado', 'Tumis Kangkung', 'Sayur Lodeh', 'Tahu Tempe Bacem']
             ]
         ];
-
         foreach ($categories as $category) {
             $cat = Category::create([
                 'category_name' => $category['name'],
             ]);
-
             $tenant_id = Tenant::inRandomOrder()->first()->id;
-
             foreach ($category['menus'] as $menu) {
                 Product::create([
                     'name' => $menu,
@@ -132,6 +130,7 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        // Seed Departments
         $departments = [
             'Informatika',
             'Sistem Informasi',
@@ -154,34 +153,91 @@ class DatabaseSeeder extends Seeder
             'Kedokteran',
             'Farmasi'
         ];
-
         foreach ($departments as $dept) {
             Department::create([
                 'department_name' => $dept
             ]);
         }
+
+        // Seed Delivery Points
         $deliveryPoints = [
             'Selasar Gedung P',
             'Ruang Dosen Gedung P',
             'Laboratorium Gedung P',
-
             'Laboratorium Gedung W',
             'Ruang Rektorat',
             'Ruang Rapat Gedung W',
-
             'Laboratorium Gedung T',
             'Ruang Dosen Gedung T',
-
             'Laboratorium Gedung Q',
             'Auditorium Gedung Q',
             'Skyfit Gym',
             'Ruang Dosen Gedung Q',
             'Selasar Gedung Q',
         ];
-
         foreach ($deliveryPoints as $point) {
             DeliveryPoint::create([
                 'delivery_point_name' => $point,
+            ]);
+        }
+
+        // Seed Banks
+        $banks = [
+            'Bank Central Asia (BCA)',
+            'Bank Mandiri',
+            'Bank Rakyat Indonesia (BRI)',
+            'Bank Negara Indonesia (BNI)',
+            'Bank Syariah Indonesia (BSI)'
+        ];
+        foreach ($banks as $bankName) {
+            Bank::create(['bank_name' => $bankName]);
+        }
+
+        // Seed BankUsers with real names
+        $usernames = [
+            'Christian Rio Siswoyo',
+            'Ignatius Jonathan Indrajaya',
+            'Reyhan Renjiro Lauwrens',
+            'Leon Nathaniel C.D',
+            'Jovan Marcell Thamrin',
+            'Calvin Wibowo',
+            'Gabrielle Abraham',
+            'Stephanie Wibowo',
+            'Florencia Wen',
+            'Jocelyn Emelia',
+            'Marcella Angel',
+            'Irene Angelina',
+            'Natasya Sherafin',
+            'Michelle Patricia',
+        ];
+
+        foreach ($usernames as $index => $name) {
+            BankUser::create([
+                'username' => $name,
+                'account_number' => '1234567890' . str_pad($index + 1, 2, '0', STR_PAD_LEFT),
+                'bank_id' => Bank::inRandomOrder()->first()->id,
+            ]);
+        }
+
+        $porterNames = [
+            'Andi Saputra',
+            'Budi Santoso',
+            'Citra Lestari',
+            'Dewi Anggraini',
+            'Eko Prasetyo',
+            'Farah Aulia',
+            'Gilang Ramadhan',
+            'Hana Febrianti',
+            'Imam Syafiq',
+            'Joko Susilo',
+        ];
+
+        foreach ($porterNames as $index => $name) {
+            Porter::create([
+                'porter_name' => $name,
+                'porter_nrp' => 'NRP' . str_pad($index + 1, 4, '0', STR_PAD_LEFT),
+                'bank_user_id' => BankUser::inRandomOrder()->first()->id,
+                'porter_isOnline' => (bool)random_int(0, 1),
             ]);
         }
     }

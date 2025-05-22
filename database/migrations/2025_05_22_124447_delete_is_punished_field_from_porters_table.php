@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bank_users', function (Blueprint $table) {
-            $table->id();
-            $table->string('username');
-            $table->foreignId('account_number_id')->constrained('account_numbers');
-            $table->timestamps();
+        Schema::table('porters', function (Blueprint $table) {
+            $table->dropColumn('porter_isPunished');
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bank_users');
+        Schema::table('porters', function (Blueprint $table) {
+            //
+        });
     }
 };

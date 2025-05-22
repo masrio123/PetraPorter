@@ -15,10 +15,15 @@
             'icons' => 'bx bx-user',
             'route' => 'dashboard.porters.index',
         ],
-         [
+        [
             'label' => 'Delivery Point',
             'icons' => 'bx bx-map',
             'route' => 'dashboard.delivery-points.index',
+        ],
+        [
+            'label' => 'Bank User',
+            'icons' => 'bx bx-money',
+            'route' => 'dashboard.bank-users.index',
         ],
         [
             'type' => 'divider',

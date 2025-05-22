@@ -10,7 +10,6 @@
             </a>
         </div>
 
-
         <div class="card card-body shadow-sm overflow-auto">
             <table class="table table-bordered table-hover align-middle">
                 <thead class="text-center table-light">
@@ -32,8 +31,8 @@
                             <td class="text-center">{{ $porter->porter_name }}</td>
                             <td class="text-center">{{ $porter->porter_nrp }}</td>
                             <td class="text-center">{{ $porter->department->department_name ?? '-' }}</td>
-                            <td class="text-center">{{ $porter->porter_account_number }}</td>
-                            <td class="text-center">{{ $porter->porter_rating }}</td>
+                            <td class="text-center">{{ $porter->bankUser->account_number ?? '-' }}</td>
+                            <td class="text-center">{{ $porter->porter_rating ?? '-' }}</td>
                             <td class="text-center">
                                 @if ($porter->porter_isOnline)
                                     <span class="d-inline-flex align-items-center gap-2 text-success fw-semibold">
