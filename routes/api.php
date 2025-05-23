@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TenantController;
+use App\Http\Controllers\Api\TenantController as ApiTenantController;
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Api\CartController as ApiCartController;
@@ -35,6 +35,11 @@ Route::post('/cart-items', [ApiCartItemController::class, 'store']); // tambah i
 Route::put('/cart-items/{id}', [ApiCartItemController::class, 'update']); // ubah qty
 Route::delete('/cart-items/{id}', [ApiCartItemController::class, 'destroy']); // hapus item
 
+Route::get('/tenants', [ApiTenantController::class, 'index']);
+Route::post('/tenants', [ApiTenantController::class, 'store']);
+Route::get('/tenants/{id}', [ApiTenantController::class, 'show']);
+Route::put('/tenants/{id}', [ApiTenantController::class, 'update']);
+Route::delete('/tenants/{id}', [ApiTenantController::class, 'destroy']);
 // Route::get('/categories', [CategoryController::class, 'fetchCategories']);
 
 

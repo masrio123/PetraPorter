@@ -39,38 +39,55 @@ class ProductController extends Controller
         ]);
     }
 
-    public function getProductByTenant($id)
+    public function getProductByTenant($id): JsonResponse
     {
         $products = Product::select([
             'products.id',
-            'products.name as product_name',
+            'products.name',
             'products.price',
-            'c.category_name',
-            't.name as tenant',
             'products.isAvailable',
+            'products.created_at',
+            'products.updated_at',
+            'c.id as category_id',
+            'c.category_name',
         ])
             ->join('categories as c', 'products.category_id', '=', 'c.id')
-            ->join('tenants as t', 'products.tenant_id', '=', 't.id')
-            ->where('t.id', $id)
+            ->where('products.tenant_id', $id)
             ->get();
 
-        $data = array();
+        // Grouping products by category_id
+        $grouped = [];
 
         foreach ($products as $product) {
-            if (!isset($data[$product['category_name']])) {
-                $data[$product['category_name']] = [];
+            $categoryId = $product->category_id;
+
+            if (!isset($grouped[$categoryId])) {
+                $grouped[$categoryId] = [
+                    'id' => $product->category_id,
+                    'category_name' => $product->category_name,
+                    'products' => [],
+                ];
             }
 
-            $data[$product['category_name']][] = $product;
+            $grouped[$categoryId]['products'][] = [
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => $product->price,
+                'is_available' => $product->isAvailable,
+                'created_at' => $product->created_at,
+                'updated_at' => $product->updated_at,
+            ];
         }
+
+        // Re-index to array
+        $data = array_values($grouped);
 
         return response()->json([
             'success' => true,
-            'message' => 'Products grouped by tenants',
-            'data' => $data
+            'message' => 'Products grouped by category for tenant ID: ' . $id,
+            'data' => $data,
         ]);
     }
-
     public function storeProduct(Request $request)
     {
         try {

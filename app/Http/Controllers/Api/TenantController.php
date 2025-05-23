@@ -1,69 +1,100 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use App\Models\TenantLocation;
+use App\Http\Controllers\Controller;
 
 class TenantController extends Controller
 {
-    // View all tenants
-    public function store(Request $request)
+    public function index()
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'tenant_location_id' => 'required|exists:tenant_locations,id',
-        ]);
+        $tenants = Tenant::select([
+            "tenants.name",
+            "tenant_locations.location_name as location",
+            "tenants.isOpen",
+        ])
+            ->join('tenant_locations', 'tenants.tenant_location_id', '=', 'tenant_locations.id')
+            ->get()
+            ->map(function ($tenant) {
+                return [
+                    'name' => $tenant->name,
+                    'location' => $tenant->location,
+                    'isOpen' => $tenant->isOpen,
+                ];
+            });
 
-        Tenant::create([
-            'name' => $request->name,
-            'tenant_location_id' => $request->tenant_location_id,
-            'isOpen' => $request->has('isOpen'),
-        ]);
-
-        // Redirect dengan query param location=gedung_id
-        return redirect()->route('tenants.admin', ['location' => $request->tenant_location_id])
-            ->with('success', 'Tenant berhasil ditambahkan.');
+        return response()->json($tenants);
     }
 
-    public function update(Request $request, $id)
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'tenant_location_id' => 'required|exists:tenant_locations,id',
+            'isOpen' => 'required|boolean',
+        ]);
+
+        $tenant = Tenant::create($validated);
+
+        return response()->json([
+            'message' => 'Tenant berhasil ditambahkan.',
+            'data' => $tenant
+        ], 201);
+    }
+
+    public function show(string $id)
+    {
+        $tenant = Tenant::with('location')->find($id);
+
+        if (!$tenant) {
+            return response()->json(['message' => 'Tenant tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'name' => $tenant->name,
+            'location' => $tenant->location->location_name ?? null,
+            'isOpen' => $tenant->isOpen,
+        ]);
+    }
+
+
+    public function update(Request $request, string $id)
     {
         $tenant = Tenant::find($id);
         if (!$tenant) {
-            return redirect()->back()->with('error', 'Tenant tidak ditemukan.');
+            return response()->json(['message' => 'Tenant tidak ditemukan'], 404);
         }
 
         $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'tenant_location_id' => 'sometimes|required|exists:tenant_locations,id',
+            'name' => 'required|string|max:255',
+            'tenant_location_id' => 'required|exists:tenant_locations,id',
+            'isOpen' => 'required|boolean',
         ]);
-        $validated['isOpen'] = $request->has('isOpen');
 
         $tenant->update($validated);
 
-        return redirect()->route('tenants.admin', ['location' => $tenant->tenant_location_id])
-            ->with('success', 'Tenant berhasil diupdate.');
+        return response()->json([
+            'message' => 'Tenant berhasil diperbarui.',
+            'data' => $tenant
+        ]);
     }
 
     public function destroy($id)
     {
         $tenant = Tenant::find($id);
         if (!$tenant) {
-            return redirect()->back()->with('error', 'Tenant tidak ditemukan.');
+            return response()->json(['message' => 'Tenant tidak ditemukan'], 404);
         }
 
-        // Simpan dulu lokasi sebelum hapus
-        $location_id = $tenant->tenant_location_id;
+        if ($tenant->products()->count() > 0) {
+            return response()->json(['message' => 'Tenant tidak dapat dihapus karena masih memiliki produk.'], 400);
+        }
+
         $tenant->delete();
 
-        return redirect()->route('tenants.admin', ['location' => $location_id])
-            ->with('success', 'Tenant berhasil dihapus.');
-    }
-
-    public function viewTable()
-    {
-        $locations = TenantLocation::with('tenants')->get();
-        return view('admin', compact('locations'));
+        return response()->json(['message' => 'Tenant berhasil dihapus.']);
     }
 }

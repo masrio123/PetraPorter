@@ -20,8 +20,13 @@ class Tenant extends Model
     protected $casts = [
         'isOpen' => 'boolean',
     ];
-    
-    public function products(): HasMany {
+
+    public function products(): HasMany
+    {
         return $this->hasMany(Product::class);
+    }
+    public function location()
+    {
+        return $this->belongsTo(TenantLocation::class, 'tenant_location_id');
     }
 }
