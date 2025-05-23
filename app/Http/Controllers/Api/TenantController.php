@@ -20,6 +20,7 @@ class TenantController extends Controller
             ->get()
             ->map(function ($tenant) {
                 return [
+                    'id'=> $tenant->id,
                     'name' => $tenant->name,
                     'location' => $tenant->location,
                     'isOpen' => $tenant->isOpen,

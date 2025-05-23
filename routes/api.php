@@ -41,7 +41,7 @@ Route::post('/tenants', [ApiTenantController::class, 'store']);
 Route::get('/tenants/{id}', [ApiTenantController::class, 'show']);
 Route::put('/tenants/{id}', [ApiTenantController::class, 'update']);
 Route::delete('/tenants/{id}', [ApiTenantController::class, 'destroy']);
-Route::patch('/tenants/{id}/toggle-is-open', [ApiTenantController::class, 'toggleIsOpen']);
+Route::post('/tenants/{id}/toggle-is-open', [ApiTenantController::class, 'toggleIsOpen']);
 
 
 // Route::get('/categories', [CategoryController::class, 'fetchCategories']);
