@@ -12,6 +12,7 @@ class TenantController extends Controller
     public function index()
     {
         $tenants = Tenant::select([
+            "tenants.id",
             "tenants.name",
             "tenant_locations.location_name as location",
             "tenants.isOpen",
@@ -55,6 +56,7 @@ class TenantController extends Controller
         }
 
         return response()->json([
+            'id'=> $tenant->id,
             'name' => $tenant->name,
             'location' => $tenant->location->location_name ?? null,
             'isOpen' => $tenant->isOpen,
