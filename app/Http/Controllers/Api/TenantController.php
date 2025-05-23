@@ -63,24 +63,38 @@ class TenantController extends Controller
 
     public function update(Request $request, string $id)
     {
-        $tenant = Tenant::find($id);
-        if (!$tenant) {
-            return response()->json(['message' => 'Tenant tidak ditemukan'], 404);
+        try {
+            $tenant = Tenant::find($id);
+
+            if (!$tenant) {
+                return response()->json(['message' => 'Tenant tidak ditemukan'], 404);
+            }
+
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'tenant_location_id' => 'required|exists:tenant_locations,id',
+                'isOpen' => 'required|boolean',
+            ]);
+
+            $tenant->update($validated);
+
+            return response()->json([
+                'message' => 'Tenant berhasil diperbarui.',
+                'data' => $tenant
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Validasi gagal.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat memperbarui tenant.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'tenant_location_id' => 'required|exists:tenant_locations,id',
-            'isOpen' => 'required|boolean',
-        ]);
-
-        $tenant->update($validated);
-
-        return response()->json([
-            'message' => 'Tenant berhasil diperbarui.',
-            'data' => $tenant
-        ]);
     }
+
 
     public function destroy($id)
     {
@@ -96,5 +110,33 @@ class TenantController extends Controller
         $tenant->delete();
 
         return response()->json(['message' => 'Tenant berhasil dihapus.']);
+    }
+
+    public function toggleIsOpen(string $id)
+    {
+        try {
+            $tenant = Tenant::find($id);
+
+            if (!$tenant) {
+                return response()->json(['message' => 'Tenant tidak ditemukan'], 404);
+            }
+
+            $tenant->isOpen = !$tenant->isOpen;
+            $tenant->save();
+
+            return response()->json([
+                'message' => 'Status isOpen berhasil diubah.',
+                'data' => [
+                    'id' => $tenant->id,
+                    'name' => $tenant->name,
+                    'isOpen' => $tenant->isOpen
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat mengubah status isOpen.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -161,7 +161,6 @@ class ProductController extends Controller
         }
     }
 
-
     public function deleteProduct($id): JsonResponse
     {
         $product = Product::findOrFail($id);
