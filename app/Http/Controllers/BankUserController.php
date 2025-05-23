@@ -56,11 +56,17 @@ class BankUserController extends Controller
         return redirect()->route('dashboard.bank-users.index')->with('success', 'Data bank user berhasil diperbarui.');
     }
 
-    public function destroy($id)
+    public function destroy(BankUser $bankUser)
     {
-        $bank_user = BankUser::findOrFail($id);
-        $bank_user->delete();
+        // Pastikan relasi 'porter' sudah ada di model BankUser
+        if ($bankUser->porter()->exists()) {
+            return redirect()->route('dashboard.bank-users.index')
+                ->with('error', 'Bank user tidak dapat dihapus karena masih menjadi porter.');
+        }
 
-        return redirect()->route('dashboard.bank-users.index')->with('success', 'Data bank user berhasil dihapus.');
+    $bankUser->delete();
+
+        return redirect()->route('dashboard.bank-users.index')
+            ->with('success', 'Bank user berhasil dihapus.');
     }
 }

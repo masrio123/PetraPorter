@@ -3,14 +3,16 @@
 @section('content')
     <div class="container">
         <h3 class="mb-4"><strong>Tenant Management</strong></h3>
+
         @php
             $groupedTenants = $tenants->groupBy('location');
             $locations = $groupedTenants->keys();
         @endphp
 
-        <div class="d-flex justify-content-between align-items-center mb-8">
+        {{-- Baris tab lokasi dan tombol tambah tenant --}}
+        <div class="d-flex justify-content-between align-items-center mb-4">
             {{-- Tabs Gedung --}}
-            <ul class="nav nav-pills mb-0" id="locationTabs" role="tablist">
+            <ul class="nav nav-pills mb-0" id="locationTabs" role="tablist" style="flex-grow: 1;">
                 @foreach ($locations as $index => $location)
                     <li class="nav-item me-2" role="presentation">
                         <button class="nav-link @if ($index === 0) active @endif"
@@ -23,21 +25,23 @@
                     </li>
                 @endforeach
             </ul>
-        </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            {{-- Search Bar Live --}}
-            <div class="d-flex align-items-center me-3" style="flex: 1;">
-                <input type="text" id="searchTenant" class="form-control me-2" placeholder="Cari tenant...">
-                <span class="spinner-border spinner-border-sm text-secondary d-none" id="searchLoading"
-                    role="status"></span>
+            {{-- Tombol Tambah Tenant di kanan sejajar --}}
+            <div class="ms-3">
+                <a href="{{ route('dashboard.tenants.create') }}" class="btn text-white" style="background-color: #ff7622;">
+                    Tambah Tenant
+                </a>
             </div>
-
-            {{-- Tombol Tambah Tenant --}}
-            <a href="{{ route('dashboard.tenants.create') }}" class="btn text-white" style="background-color: #ff7622;">
-                Tambah Tenant
-            </a>
         </div>
+
+        {{-- Alert Success --}}
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
         {{-- Isi Tab --}}
         <div class="tab-content" id="locationTabsContent">
@@ -65,17 +69,13 @@
                                             <td>{{ $tenant->name }}</td>
                                             <td>
                                                 @if ($tenant->isOpen)
-                                                    <span
-                                                        class="d-inline-flex align-items-center gap-2 text-success fw-semibold">
-                                                        <span class="rounded-circle"
-                                                            style="width: 10px; height: 10px; background-color: #28a745;"></span>
+                                                    <span class="d-inline-flex align-items-center gap-2 text-success fw-semibold">
+                                                        <span class="rounded-circle" style="width: 10px; height: 10px; background-color: #28a745;"></span>
                                                         Buka
                                                     </span>
                                                 @else
-                                                    <span
-                                                        class="d-inline-flex align-items-center gap-2 text-danger fw-semibold">
-                                                        <span class="rounded-circle"
-                                                            style="width: 10px; height: 10px; background-color: #dc3545;"></span>
+                                                    <span class="d-inline-flex align-items-center gap-2 text-danger fw-semibold">
+                                                        <span class="rounded-circle" style="width: 10px; height: 10px; background-color: #dc3545;"></span>
                                                         Tutup
                                                     </span>
                                                 @endif
@@ -114,15 +114,13 @@
                                                         <h5 class="mb-3 fw-bold">Hapus Tenant</h5>
                                                         <p class="mb-4">
                                                             Apakah Anda yakin ingin menghapus tenant <br>
-                                                            <strong>{{ $tenant->name }}</strong>? <br> Tindakan ini tidak dapat
-                                                            dibatalkan.
+                                                            <strong>{{ $tenant->name }}</strong>? <br> Tindakan ini tidak dapat dibatalkan.
                                                         </p>
                                                         <div class="d-flex justify-content-center gap-3">
                                                             <button type="button"
                                                                 class="btn btn-outline-secondary px-4 rounded-pill"
                                                                 data-bs-dismiss="modal">Batal</button>
-                                                            <form
-                                                                action="{{ route('dashboard.tenants.destroy', $tenant->id) }}"
+                                                            <form action="{{ route('dashboard.tenants.destroy', $tenant->id) }}"
                                                                 method="POST" class="d-inline">
                                                                 @csrf
                                                                 @method('DELETE')

@@ -3,14 +3,18 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TenantController;
+
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Api\CartController as ApiCartController;
+use App\Http\Controllers\Api\CartItemController as ApiCartItemController;
+
+use App\Http\Controllers\Api\ProductController as ApiProductController;
 use App\Http\Controllers\Api\DeliveryPointController as ApiDeliveryPointController;
-use App\Http\Controllers\Api\ProductController as ApiProductController; 
 
 
-Route::get('/products', [ApiProductController::class,'fetchAllProducts']);
-Route::get('/products/{id}', [ApiProductController::class,'getProductByTenant']);
-Route::put('/products/toggle/{id}', [ApiProductController::class,'toggleAvailability']);
+Route::get('/products', [ApiProductController::class, 'fetchAllProducts']);
+Route::get('/products/{id}', [ApiProductController::class, 'getProductByTenant']);
+Route::put('/products/toggle/{id}', [ApiProductController::class, 'toggleAvailability']);
 Route::post('/products/store', [ApiProductController::class, 'storeProduct']);
 Route::put('products/{id}/edit', [ApiProductController::class, 'updateProduct']);
 Route::delete('products/{id}/delete', [ApiProductController::class, 'deleteProduct']);
@@ -22,6 +26,14 @@ Route::put('/delivery-points/{id}/edit', [ApiDeliveryPointController::class, 'ed
 Route::delete('/delivery-points/{id}/delete', [ApiDeliveryPointController::class, 'destroy']);
 
 
+// CART
+Route::get('/cart', [ApiCartController::class, 'getOrCreateCart']); // dapetin cart aktif
+Route::post('/cart/{cart}/checkout', [ApiCartController::class, 'checkout']); // checkout cart
+
+// CART ITEMS
+Route::post('/cart-items', [ApiCartItemController::class, 'store']); // tambah item
+Route::put('/cart-items/{id}', [ApiCartItemController::class, 'update']); // ubah qty
+Route::delete('/cart-items/{id}', [ApiCartItemController::class, 'destroy']); // hapus item
 
 // Route::get('/categories', [CategoryController::class, 'fetchCategories']);
 

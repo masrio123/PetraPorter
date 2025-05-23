@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" class="layout-menu-fixed layout-compact" data-assets-path="../assets/" data-template="vertical-menu-template-free">
+<html lang="en" class="layout-menu-fixed layout-compact" data-assets-path="{{ asset('assets/') }}"
+    data-template="vertical-menu-template-free">
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
-
     <title>@yield('title', 'Petra Porter')</title>
-    <meta name="description" content="" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}" />
@@ -16,8 +14,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap"
         rel="stylesheet" />
 
     <!-- Icons -->
@@ -33,57 +30,102 @@
 
     <!-- Helpers -->
     <script src="{{ asset('assets/vendor/js/helpers.js') }}" defer></script>
-
-    <!-- Config: theme -->
     <script src="{{ asset('assets/js/config.js') }}" defer></script>
-
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
 
     <style>
         body {
             background-color: #ffffff !important;
         }
+
+        /* Overlay background dengan animasi gorden buka dari bawah ke atas */
+        #book-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #d9d9d9;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Mulai dari clip-path yang menutup bawah */
+            clip-path: polygon(0 0%, 100% 0%, 100% 0%, 0 0%);
+        }
+
+        /* Saat aktif tampilkan dan buka gorden dari bawah ke atas */
+        #book-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+            animation: curtainOpen 1s forwards cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Animasi buka gorden dari bawah ke atas */
+       @keyframes curtainOpen {
+    from {
+        clip-path: polygon(0 0%, 100% 0%, 100% 0%, 0 0%);
+    }
+    to {
+        clip-path: polygon(0 0%, 100% 0%, 100% 100%, 0 100%);
+    }
+}
+        /* Logo */
+        #book-overlay img#book-logo {
+            height: 145px;
+            /* sesuaikan ukuran logo */
+            user-select: none;
+            pointer-events: none;
+            animation: shake 0.6s ease-in-out infinite;
+        }
+
+        /* Efek geter halus (shake) */
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-4px);
+            }
+
+            50% {
+                transform: translateX(4px);
+            }
+
+            75% {
+                transform: translateX(-4px);
+            }
+        }
     </style>
 </head>
 
 <body>
+    <div id="book-overlay">
+        <img src="{{ asset('assets/img/logo.png') }}" alt="Logo Petra Porter" id="book-logo" />
+    </div>
+
     @if (isset($viewLogin))
         @yield('content')
     @else
-        <!-- Layout wrapper -->
         <div class="layout-wrapper layout-content-navbar">
             <div class="layout-container">
-                <!-- Sidebar Menu -->
                 @include('layouts.sidebar')
-                <!-- /Sidebar Menu -->
-
-                <!-- Layout container -->
                 <div class="layout-page">
-                    <!-- Navbar -->
                     @include('layouts.navbar')
-                    <!-- /Navbar -->
-
-                    <!-- Content wrapper -->
                     <div class="content-wrapper">
-                        <!-- Main content -->
                         <div class="container-xxl flex-grow-1 container-p-y bg-white">
                             @yield('content')
                         </div>
-                        <!-- /Main content -->
-
-                        <!-- Footer -->
-                        {{-- @include('layouts.footer') --}}
-                        <!-- /Footer -->
-
                         <div class="content-backdrop fade"></div>
                     </div>
-                    <!-- /Content wrapper -->
                 </div>
-                <!-- /Layout page -->
             </div>
-
-            <!-- Overlay for mobile menu -->
             <div class="layout-overlay layout-menu-toggle"></div>
         </div>
     @endif
@@ -94,26 +136,46 @@
     <script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
     <script src="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js') }}"></script>
     <script src="{{ asset('assets/vendor/js/menu.js') }}"></script>
-
-    <!-- Vendors JS -->
     <script src="{{ asset('assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
-
-    <!-- Main JS -->
     <script src="{{ asset('assets/js/main.js') }}"></script>
 
-    {{-- Yield untuk script halaman khusus --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const overlay = document.getElementById('book-overlay');
+            const links = document.querySelectorAll('.menu-link');
+
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const targetUrl = link.href;
+                    const currentUrl = window.location.href.split(/[?#]/)[0];
+
+                    // Jangan animasi jika klik link yang sama
+                    if (targetUrl === currentUrl) return;
+
+                    e.preventDefault();
+
+                    // Aktifkan overlay & animasi
+                    overlay.classList.add('active');
+
+                    // Delay pindah halaman 1.2 detik supaya animasi selesai
+                    setTimeout(() => {
+                        window.location.href = targetUrl;
+                    }, 1200);
+                });
+            });
+        });
+    </script>
+
     @yield('scripts')
 
-    {{-- SweetAlert2 flash message --}}
     @if (session('success') || session('error'))
         @php
             $title = session('success') ? 'success' : 'error';
             $message = session('success') ?? session('error');
             session()->forget(['success', 'error']);
         @endphp
-
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 Swal.fire({
                     title: '{{ ucfirst($title) }}',
                     text: "{{ $message }}",

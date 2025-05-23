@@ -193,52 +193,6 @@ class DatabaseSeeder extends Seeder
             Bank::create(['bank_name' => $bankName]);
         }
 
-        // Seed BankUsers with real names
-        $usernames = [
-            'Christian Rio Siswoyo',
-            'Ignatius Jonathan Indrajaya',
-            'Reyhan Renjiro Lauwrens',
-            'Leon Nathaniel C.D',
-            'Jovan Marcell Thamrin',
-            'Calvin Wibowo',
-            'Gabrielle Abraham',
-            'Stephanie Wibowo',
-            'Florencia Wen',
-            'Jocelyn Emelia',
-            'Marcella Angel',
-            'Irene Angelina',
-            'Natasya Sherafin',
-            'Michelle Patricia',
-        ];
-
-        foreach ($usernames as $index => $name) {
-            BankUser::create([
-                'username' => $name,
-                'account_number' => '1234567890' . str_pad($index + 1, 2, '0', STR_PAD_LEFT),
-                'bank_id' => Bank::inRandomOrder()->first()->id,
-            ]);
-        }
-
-        $porterNames = [
-            'Andi Saputra',
-            'Budi Santoso',
-            'Citra Lestari',
-            'Dewi Anggraini',
-            'Eko Prasetyo',
-            'Farah Aulia',
-            'Gilang Ramadhan',
-            'Hana Febrianti',
-            'Imam Syafiq',
-            'Joko Susilo',
-        ];
-
-        foreach ($porterNames as $index => $name) {
-            Porter::create([
-                'porter_name' => $name,
-                'porter_nrp' => 'NRP' . str_pad($index + 1, 4, '0', STR_PAD_LEFT),
-                'bank_user_id' => BankUser::inRandomOrder()->first()->id,
-                'porter_isOnline' => (bool)random_int(0, 1),
-            ]);
-        }
+        
     }
 }

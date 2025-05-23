@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('porters', function (Blueprint $table) {
-            $table->dropColumn('porter_isPunished');
+        Schema::create('customers', function (Blueprint $table) {
+            $table->id();
+            $table->string('customer_name');
+            $table->foreignId('department_id')->constrained('departments');
+            $table->foreignId('bank_user_id')->constrained('bank_users');
+            $table->timestamps();
         });
     }
 
@@ -21,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('porters', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('customers');
     }
 };
