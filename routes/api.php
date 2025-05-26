@@ -53,8 +53,9 @@ Route::prefix('customers')->group(function () {
     Route::delete('/{id}', [ApiCustomerController::class, 'destroy']); // DELETE customer
 });
 
+Route::get('/categories', [CategoryController::class, 'fetchCategories']);
+Route::get('/categories', [CategoryController::class, 'fetchCategories']);
 
-// Route::get('/categories', [CategoryController::class, 'fetchCategories']);
 // Route::get('/products', [ProductController::class, 'fetchAllProducts']);
 
 
