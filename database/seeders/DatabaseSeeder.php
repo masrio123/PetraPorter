@@ -192,7 +192,61 @@ class DatabaseSeeder extends Seeder
         foreach ($banks as $bankName) {
             Bank::create(['bank_name' => $bankName]);
         }
+        // Seed Bank Users
+        $bankUsers = [
+            ['username' => 'Andi Wijaya',     'account_number' => '1234567890'],
+            ['username' => 'Siti Nurhaliza',  'account_number' => '2345678901'],
+            ['username' => 'Budi Santoso',    'account_number' => '3456789012'],
+            ['username' => 'Dewi Lestari',    'account_number' => '4567890123'],
+            ['username' => 'Agus Prabowo',    'account_number' => '5678901234'],
+            ['username' => 'Rina Marlina',    'account_number' => '6789012345'],
+            ['username' => 'Tono Suhendra',   'account_number' => '7890123456'],
+            ['username' => 'Wulan Ayu',       'account_number' => '8901234567'],
+            ['username' => 'Fajar Nugroho',   'account_number' => '9012345678'],
+            ['username' => 'Melati Putri',    'account_number' => '0123456789'],
+        ];
 
-        
+        foreach ($bankUsers as $user) {
+            BankUser::create([
+                'username' => $user['username'],
+                'account_number' => $user['account_number'],
+                'bank_id' => Bank::inRandomOrder()->first()->id,
+            ]);
+        }
+
+        // Seed Customers
+        $customerNames = [
+            'Daniel Simanjuntak',
+            'Yuliana Sari',
+            'Rendy Mahardika',
+            'Clara Wibowo',
+            'Iman Firmansyah',
+            'Tania Lestari',
+            'Hendrik Gunawan',
+            'Maria Kristina',
+            'Alvin Nugroho',
+            'Vania Yosephine',
+        ];
+
+        foreach ($customerNames as $name) {
+            \App\Models\Customer::create([
+                'customer_name' => $name,
+                'department_id' => \App\Models\Department::inRandomOrder()->first()->id,
+                'bank_user_id' => \App\Models\BankUser::inRandomOrder()->first()->id,
+            ]);
+        }
+
+        // Seed Porters berdasarkan BankUser
+        $bankUsers = \App\Models\BankUser::all();
+
+        foreach ($bankUsers as $index => $bankUser) {
+            \App\Models\Porter::create([
+                'porter_name'     => $bankUser->username,
+                'porter_nrp'      => '24010' . str_pad($index + 1, 3, '0', STR_PAD_LEFT), // Contoh NRP: 24010001 dst
+                'department_id'   => \App\Models\Department::inRandomOrder()->first()->id,
+                'bank_user_id'    => $bankUser->id,
+                'porter_isOnline' => false,
+            ]);
+        }
     }
 }
