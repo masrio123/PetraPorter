@@ -65,7 +65,7 @@ class TenantController extends Controller
         return response()->json([
             'id' => $tenant->id,
             'name' => $tenant->name,
-            'location' => $tenant->location->location_name ?? null,
+            'location' => $tenant->location,
             'isOpen' => $tenant->isOpen,
         ]);
     }
