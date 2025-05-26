@@ -10,7 +10,13 @@ class TenantLocation extends Model
     protected $table = "tenant_locations";
     protected $fillable = ['location_name'];
 
-    public function tenants (): HasMany {
+    public function tenants()
+    {
         return $this->hasMany(Tenant::class);
+    }
+
+    public function carts()
+    {
+        return $this->hasMany(Cart::class);
     }
 }

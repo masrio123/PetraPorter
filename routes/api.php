@@ -12,7 +12,7 @@ use App\Http\Controllers\Api\ProductController as ApiProductController;
 use App\Http\Controllers\Api\CartItemController as ApiCartItemController;
 use App\Http\Controllers\Api\DeliveryPointController as ApiDeliveryPointController;
 
-
+//Product
 Route::get('/products', [ApiProductController::class, 'fetchAllProducts']);
 Route::get('/products/{id}', [ApiProductController::class, 'getProductByTenant']);
 Route::put('/products/toggle/{id}', [ApiProductController::class, 'toggleAvailability']);
@@ -20,25 +20,24 @@ Route::post('/products/store', [ApiProductController::class, 'storeProduct']);
 Route::put('products/{id}/edit', [ApiProductController::class, 'updateProduct']);
 Route::delete('products/{id}/delete', [ApiProductController::class, 'deleteProduct']);
 
-
+//Delivery Points
 Route::get('/delivery-points', [ApiDeliveryPointController::class, 'fetchDeliveryPoint']);
 Route::post('/delivery-points/store', [ApiDeliveryPointController::class, 'store']);
 Route::put('/delivery-points/{id}/edit', [ApiDeliveryPointController::class, 'edit']);
 Route::delete('/delivery-points/{id}/delete', [ApiDeliveryPointController::class, 'destroy']);
 
+//Cart
+Route::post('/cart', [ApiCartController::class, 'createCart']);
+Route::get('/cart/{id}', [ApiCartController::class, 'showCart']);
+Route::delete('/cart/{id}', [ApiCartController::class, 'deleteCart']);
+Route::post('/cart/{id}/checkout', [ApiCartController::class, 'checkoutCart']);
 
-// CART
-Route::get('/cart', [ApiCartController::class, 'getOrCreateCart']); // dapetin cart aktif
-Route::post('/cart/add', [ApiCartController::class, 'addProductToCart']);
-Route::get('/carts/{cartId}', [ApiCartItemController::class, 'showCart']);
-Route::post('/cart/{cart}/checkout', [ApiCartController::class, 'checkout']); // checkout cart
-
-// CART ITEMS
-Route::get('/carts/{cartId}', [ApiCartItemController::class, 'showCart']);
-Route::delete('/cart-items/{id}', [ApiCartItemController::class, 'deleteItem']);
+//Cart Item
+Route::post('/cart-items', [ApiCartItemController::class, 'addItem']);
+Route::delete('/cart-items/{tenantId}/{productId}', [ApiCartItemController::class, 'deleteByTenantAndProduct']);
 
 //Tenants
-Route::get('/tenants', [ApiTenantController::class, 'index']);
+Route::get('/tenants', [ApiTenantController::class, 'index']);  
 Route::post('/tenants', [ApiTenantController::class, 'store']);
 Route::get('/tenants/{id}', [ApiTenantController::class, 'show']);
 Route::put('/tenants/{id}', [ApiTenantController::class, 'update']);

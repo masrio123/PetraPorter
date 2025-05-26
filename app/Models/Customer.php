@@ -18,4 +18,8 @@ class Customer extends Model
     {
         return $this->belongsTo(BankUser::class);
     }
+    public function carts()
+    {
+        return $this->hasMany(Cart::class);
+    }
 }

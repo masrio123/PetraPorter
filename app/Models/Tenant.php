@@ -25,8 +25,13 @@ class Tenant extends Model
     {
         return $this->hasMany(Product::class);
     }
-    public function location()
+
+    public function tenantLocation()
     {
         return $this->belongsTo(TenantLocation::class, 'tenant_location_id');
+    }
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class);
     }
 }
