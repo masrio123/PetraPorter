@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Api\CategoryController as ApiCategoryController;
 
 use App\Http\Controllers\Api\CustomerController as ApiCustomerController;
 use App\Http\Controllers\Api\CartController as ApiCartController;
@@ -53,8 +53,9 @@ Route::prefix('customers')->group(function () {
     Route::delete('/{id}', [ApiCustomerController::class, 'destroy']); // DELETE customer
 });
 
-Route::get('/categories', [CategoryController::class, 'fetchCategories']);
-Route::get('/categories', [CategoryController::class, 'fetchCategories']);
+Route::get('/categories', [ApiCategoryController::class, 'fetchCategories']);
+
+
 
 // Route::get('/products', [ProductController::class, 'fetchAllProducts']);
 
@@ -68,6 +69,7 @@ Route::get('/categories', [CategoryController::class, 'fetchCategories']);
 
 // Route::get('/admin', [TenantController::class, 'viewTable'])->name(name: 'tenants.admin');
 // Route::get('/user', function (Request $request) {
+//     return $request->user();
 //     return $request->user();
 // })->middleware('auth:sanctum');
 

@@ -21,7 +21,7 @@ class TenantController extends Controller
             ->get()
             ->map(function ($tenant) {
                 return [
-                    'id'=> $tenant->id,
+                    'id' => $tenant->id,
                     'name' => $tenant->name,
                     'location' => $tenant->location,
                     'isOpen' => $tenant->isOpen,
@@ -49,14 +49,21 @@ class TenantController extends Controller
 
     public function show(string $id)
     {
-        $tenant = Tenant::with('location')->find($id);
+        $tenant = Tenant::Select([
+            'tenants.id',
+            'tenants.name',
+            'tl.location_name as location',
+            'tenants.isOpen'
+        ])
+            ->join('tenant_locations as tl', 'tenants.tenant_location_id', '=', 'tl.id')
+            ->first();
 
         if (!$tenant) {
             return response()->json(['message' => 'Tenant tidak ditemukan'], 404);
         }
 
         return response()->json([
-            'id'=> $tenant->id,
+            'id' => $tenant->id,
             'name' => $tenant->name,
             'location' => $tenant->location->location_name ?? null,
             'isOpen' => $tenant->isOpen,
