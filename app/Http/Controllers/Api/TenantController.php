@@ -49,13 +49,14 @@ class TenantController extends Controller
 
     public function show(string $id)
     {
-        $tenant = Tenant::Select([
+        $tenant = Tenant::select([
             'tenants.id',
             'tenants.name',
             'tl.location_name as location',
             'tenants.isOpen'
         ])
             ->join('tenant_locations as tl', 'tenants.tenant_location_id', '=', 'tl.id')
+            ->where('tenants.id', $id) // ❗ Filter sesuai ID
             ->first();
 
         if (!$tenant) {
@@ -69,7 +70,6 @@ class TenantController extends Controller
             'isOpen' => $tenant->isOpen,
         ]);
     }
-
 
     public function update(Request $request, string $id)
     {
@@ -104,7 +104,6 @@ class TenantController extends Controller
             ], 500);
         }
     }
-
 
     public function destroy($id)
     {
@@ -148,5 +147,22 @@ class TenantController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function fetchTenantsByLocation($tenantLocationId)
+    {
+        $tenantLocation = TenantLocation::with('tenants:id,name,tenant_location_id')->find($tenantLocationId);
+
+        if (!$tenantLocation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Location not found',
+                'data' => null
+            ], 404);
+        }
+
+        return response()->json([
+            $tenantLocation->location_name => $tenantLocation->tenants
+        ]);
     }
 }

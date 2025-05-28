@@ -2,14 +2,17 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\CategoryController as ApiCategoryController;
+use App\Http\Controllers\TenantController;
 
-use App\Http\Controllers\Api\CustomerController as ApiCustomerController;
+use App\Http\Controllers\Api\OrderController as ApiOrderController;
+use App\Http\Controllers\Api\OrderItemController as ApiOrderItemController;
 use App\Http\Controllers\Api\CartController as ApiCartController;
-use App\Http\Controllers\Api\TenantController as ApiTenantController;
 
+use App\Http\Controllers\Api\TenantController as ApiTenantController;
 use App\Http\Controllers\Api\ProductController as ApiProductController;
 use App\Http\Controllers\Api\CartItemController as ApiCartItemController;
+use App\Http\Controllers\Api\CategoryController as ApiCategoryController;
+use App\Http\Controllers\Api\CustomerController as ApiCustomerController;
 use App\Http\Controllers\Api\DeliveryPointController as ApiDeliveryPointController;
 
 //Product
@@ -31,18 +34,21 @@ Route::post('/cart', [ApiCartController::class, 'createCart']);
 Route::get('/cart/{id}', [ApiCartController::class, 'showCart']);
 Route::delete('/cart/{id}', [ApiCartController::class, 'deleteCart']);
 Route::post('/cart/{id}/checkout', [ApiCartController::class, 'checkoutCart']);
+Route::get('/allCarts', [ApiCartController::class, 'getAllCarts']);
 
 //Cart Item
 Route::post('/cart-items', [ApiCartItemController::class, 'addItem']);
-Route::delete('/cart-items/{tenantId}/{productId}', [ApiCartItemController::class, 'deleteByTenantAndProduct']);
+Route::delete('/cart-items/{tenantId}/{productId}', action: [ApiCartItemController::class, 'deleteByTenantAndProduct']);
 
 //Tenants
-Route::get('/tenants', [ApiTenantController::class, 'index']);  
+Route::get('/tenants', [ApiTenantController::class, 'index']);
 Route::post('/tenants', [ApiTenantController::class, 'store']);
 Route::get('/tenants/{id}', [ApiTenantController::class, 'show']);
 Route::put('/tenants/{id}', [ApiTenantController::class, 'update']);
 Route::delete('/tenants/{id}', [ApiTenantController::class, 'destroy']);
 Route::patch('/tenants/{id}/toggle-is-open', [ApiTenantController::class, 'toggleIsOpen']);
+Route::get('/location/{id}/tenants', [ApiTenantController::class, 'fetchTenantsByLocation']);
+
 
 //Customer
 Route::prefix('customers')->group(function () {
@@ -54,12 +60,22 @@ Route::prefix('customers')->group(function () {
 });
 
 Route::get('/categories', [ApiCategoryController::class, 'fetchCategories']);
+Route::get('/tenants/{id}/categories-with-menus', [ApiCategoryController::class, 'fetchCategoriesWithMenusByTenant']);
 
+// Group route dengan prefix dan middleware auth jika diperlukan
+Route::prefix('orders')->group(function () {
+    Route::get('/', [ApiOrderController::class, 'index']);
+    Route::get('{id}', [ApiOrderController::class, 'show']);
+    Route::delete('{id}', [ApiOrderController::class, 'destroy']);
+    Route::get('{id}/items', [ApiOrderItemController::class, 'getByOrder']);
+});
+
+Route::get('/order-items', [ApiOrderItemController::class, 'index']);
+Route::get('/order-items/search-porter/{orderId}', [ApiOrderItemController::class, 'searchPorter']);
+Route::delete('/order-items/cancel/{id}', [ApiOrderItemController::class, 'cancelOrder']);
 
 
 // Route::get('/products', [ProductController::class, 'fetchAllProducts']);
-
-
 // Route::get('/tenants', [TenantController::class, 'index']);
 // Route::post('/tenants/add', [TenantController::class, 'store']);
 // Route::get('/tenants/show/{id}', [TenantController::class, 'show']);

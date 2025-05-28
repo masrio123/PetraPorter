@@ -124,42 +124,42 @@ class ProductController extends Controller
         }
     }
 
-    public function updateProduct(Request $request, $id): JsonResponse
-    {
-        try {
-            $product = Product::findOrFail($id);
+        public function updateProduct(Request $request, $id): JsonResponse
+        {
+            try {
+                $product = Product::findOrFail($id);
 
-            $validated = $request->validate([
-                'name' => 'sometimes|string',
-                'price' => 'sometimes|numeric',
-                'tenant_id'    => 'required|exists:tenants,id',
-                'isAvailable' => 'sometimes|boolean',
-                'category_id' => 'sometimes|exists:categories,id',
-            ]);
-            $product->update($validated);
-            $product->load('category');
+                $validated = $request->validate([
+                    'name' => 'sometimes|string',
+                    'price' => 'sometimes|numeric',
+                    'tenant_id'    => 'required|exists:tenants,id',
+                    'isAvailable' => 'sometimes|boolean',
+                    'category_id' => 'sometimes|exists:categories,id',
+                ]);
+                $product->update($validated);
+                $product->load('category');
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Product updated successfully',
-                'data' => $product
-            ]);
-        } catch (ValidationException $e) {
-            // Tangani kesalahan validasi
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors'  => $e->errors(),
-            ], 422);
-        } catch (\Exception $e) {
-            // Tangani error umum
-            return response()->json([
-                'success' => false,
-                'message' => 'Something went wrong',
-                'error'   => $e->getMessage(), // hilangkan ini di production jika sensitif
-            ], 500);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product updated successfully',
+                    'data' => $product
+                ]);
+            } catch (ValidationException $e) {
+                // Tangani kesalahan validasi
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors'  => $e->errors(),
+                ], 422);
+            } catch (\Exception $e) {
+                // Tangani error umum
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Something went wrong',
+                    'error'   => $e->getMessage(), // hilangkan ini di production jika sensitif
+                ], 500);
+            }
         }
-    }
 
     public function deleteProduct($id): JsonResponse
     {
@@ -183,5 +183,5 @@ class ProductController extends Controller
             'message' => 'Availability updated successfully',
             'data' => $product,
         ]);
-    }
+    }   
 }

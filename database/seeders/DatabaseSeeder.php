@@ -13,6 +13,7 @@ use App\Models\Department;
 use App\Models\DeliveryPoint;
 use App\Models\TenantLocation;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
@@ -55,66 +56,77 @@ class DatabaseSeeder extends Seeder
         // Seed Categories & Products
         $categories = [
             [
-                'name' => 'Makanan Pedas',
-                'menus' => ['Ayam Geprek', 'Seblak Jeletet', 'Mie Setan', 'Sambal Bakar Spesial']
+                'name' => 'Makanan',
+                'menus' => [
+                    'Ayam Geprek',
+                    'Seblak Jeletet',
+                    'Mie Setan',
+                    'Sambal Bakar Spesial',
+                    'Tahu Crispy',
+                    'Cireng Isi',
+                    'Kentang Goreng',
+                    'Bakwan Sayur',
+                    'Nasi Goreng Spesial',
+                    'Sate Ayam',
+                    'Rendang Daging',
+                    'Ayam Bakar Madu',
+                    'Spaghetti Bolognese',
+                    'Sushi Roll',
+                    'Burger Daging Sapi',
+                    'Pizza Keju',
+                    'Gudeg Jogja',
+                    'Pempek Palembang',
+                    'Lontong Sayur',
+                    'Rawon Surabaya',
+                    'Pisang Coklat',
+                    'Kue Cubit',
+                    'Martabak Manis',
+                    'Pudding Coklat',
+                    'Lemper Ayam',
+                    'Nagasari',
+                    'Klepon',
+                    'Pastel Goreng',
+                    'Mie Ayam Komplit',
+                    'Mie Goreng Jawa',
+                    'Mie Kocok Bandung',
+                    'Ramen Pedas',
+                    'Nasi Uduk',
+                    'Nasi Kuning',
+                    'Nasi Liwet',
+                    'Nasi Campur Bali',
+                    'Ikan Bakar Rica',
+                    'Cumi Goreng Tepung',
+                    'Udang Saus Padang',
+                    'Kerang Rebus',
+                    'Gado-Gado',
+                    'Tumis Kangkung',
+                    'Sayur Lodeh',
+                    'Tahu Tempe Bacem'
+                ]
             ],
             [
-                'name' => 'Makanan Ringan',
-                'menus' => ['Tahu Crispy', 'Cireng Isi', 'Kentang Goreng', 'Bakwan Sayur']
-            ],
-            [
-                'name' => 'Minuman Dingin',
-                'menus' => ['Es Teh Manis', 'Es Kopi Susu', 'Thai Tea', 'Es Cincau']
-            ],
-            [
-                'name' => 'Minuman Hangat',
-                'menus' => ['Teh Tawar Hangat', 'Kopi Tubruk', 'Wedang Jahe', 'Coklat Panas']
-            ],
-            [
-                'name' => 'Makanan Berat',
-                'menus' => ['Nasi Goreng Spesial', 'Sate Ayam', 'Rendang Daging', 'Ayam Bakar Madu']
-            ],
-            [
-                'name' => 'Makanan Internasional',
-                'menus' => ['Spaghetti Bolognese', 'Sushi Roll', 'Burger Daging Sapi', 'Pizza Keju']
-            ],
-            [
-                'name' => 'Makanan Tradisional',
-                'menus' => ['Gudeg Jogja', 'Pempek Palembang', 'Lontong Sayur', 'Rawon Surabaya']
-            ],
-            [
-                'name' => 'Minuman Tradisional',
-                'menus' => ['Bajigur', 'Bandrek', 'Wedang Uwuh', 'Cendol Dawet']
-            ],
-            [
-                'name' => 'Dessert & Manisan',
-                'menus' => ['Pisang Coklat', 'Kue Cubit', 'Martabak Manis', 'Pudding Coklat']
-            ],
-            [
-                'name' => 'Kudapan Pasar',
-                'menus' => ['Lemper Ayam', 'Nagasari', 'Klepon', 'Pastel Goreng']
-            ],
-            [
-                'name' => 'Minuman Kekinian',
-                'menus' => ['Boba Milk Tea', 'Kopi Susu Gula Aren', 'Mojito Lemon', 'Yakult Green Tea']
-            ],
-            [
-                'name' => 'Olahan Mie',
-                'menus' => ['Mie Ayam Komplit', 'Mie Goreng Jawa', 'Mie Kocok Bandung', 'Ramen Pedas']
-            ],
-            [
-                'name' => 'Olahan Nasi',
-                'menus' => ['Nasi Uduk', 'Nasi Kuning', 'Nasi Liwet', 'Nasi Campur Bali']
-            ],
-            [
-                'name' => 'Makanan Laut',
-                'menus' => ['Ikan Bakar Rica', 'Cumi Goreng Tepung', 'Udang Saus Padang', 'Kerang Rebus']
-            ],
-            [
-                'name' => 'Vegetarian',
-                'menus' => ['Gado-Gado', 'Tumis Kangkung', 'Sayur Lodeh', 'Tahu Tempe Bacem']
+                'name' => 'Minuman',
+                'menus' => [
+                    'Es Teh Manis',
+                    'Es Kopi Susu',
+                    'Thai Tea',
+                    'Es Cincau',
+                    'Teh Tawar Hangat',
+                    'Kopi Tubruk',
+                    'Wedang Jahe',
+                    'Coklat Panas',
+                    'Bajigur',
+                    'Bandrek',
+                    'Wedang Uwuh',
+                    'Cendol Dawet',
+                    'Boba Milk Tea',
+                    'Kopi Susu Gula Aren',
+                    'Mojito Lemon',
+                    'Yakult Green Tea'
+                ]
             ]
         ];
+
         foreach ($categories as $category) {
             $cat = Category::create([
                 'category_name' => $category['name'],
@@ -248,5 +260,22 @@ class DatabaseSeeder extends Seeder
                 'porter_isOnline' => false,
             ]);
         }
+
+         $statuses = [
+            'received',
+            'processing',
+            'picked_up',
+            'delivered',
+            'finished',
+        ];
+
+        foreach ($statuses as $status) {
+            DB::table('order_statuses')->insert([
+                'order_status' => $status,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    
     }
 }
