@@ -14,6 +14,9 @@ use App\Models\DeliveryPoint;
 use App\Models\TenantLocation;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Hash;
+
 
 class DatabaseSeeder extends Seeder
 {
@@ -22,6 +25,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Buat roles
+        Role::create(['name' => 'admin']);
+        Role::create(['name' => 'tenant']);
+        Role::create(['name' => 'porter']);
+        Role::create(['name' => 'user']);
+
+        $admin = User::create([
+            'name' => 'Administrator',
+            'email' => 'admin@gmail.com',
+            'password' => Hash::make('admin123'), 
+        ]);
+
+        $admin->assignRole('admin');
+
         // Seed Tenant Locations
         $locations = ["P", "Q", "W", "T"];
         foreach ($locations as $location) {
@@ -45,10 +62,19 @@ class DatabaseSeeder extends Seeder
             "Pangsit Mie Tenda Biru",
             "Singapore Crispy Snacks"
         ];
-        foreach ($tenants as $tenant) {
+        foreach ($tenants as $key => $tenant) {
+            $user = User::create([
+                'name' => 'Tenant '. $tenant,
+                'email' => 'tenant'.$key.'@gmail.com',
+                'password' => Hash::make('tenant123'), 
+            ]);
+
+            $user->assignRole("tenant");
+
             Tenant::create([
                 "name" => $tenant,
                 'tenant_location_id' => TenantLocation::inRandomOrder()->first()->id,
+                'user_id' => $user->id,
                 'isOpen' => true
             ]);
         }

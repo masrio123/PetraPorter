@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->foreignId('tenant_location_id')->constrained('tenant_locations');
+            $table->integer('user_id')->nullable(); 
             $table->boolean('isOpen')->default(true);
             $table->timestamps();
         });
