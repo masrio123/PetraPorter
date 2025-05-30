@@ -278,12 +278,21 @@ class DatabaseSeeder extends Seeder
         $bankUsers = \App\Models\BankUser::all();
 
         foreach ($bankUsers as $index => $bankUser) {
+            $user = User::create([
+                'name' => $bankUser->username,
+                'email' => 'porter'.$index.'@gmail.com',
+                'password' => Hash::make('porter123'), 
+            ]);
+
+            $user->assignRole("porter");
+
             \App\Models\Porter::create([
                 'porter_name'     => $bankUser->username,
                 'porter_nrp'      => '24010' . str_pad($index + 1, 3, '0', STR_PAD_LEFT), // Contoh NRP: 24010001 dst
                 'department_id'   => \App\Models\Department::inRandomOrder()->first()->id,
                 'bank_user_id'    => $bankUser->id,
                 'porter_isOnline' => false,
+                'user_id' => $user->id
             ]);
         }
 

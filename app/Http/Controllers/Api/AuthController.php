@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Porter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -28,12 +29,20 @@ class AuthController extends Controller
 
         $userData = $user->toArray();
         $userData['tenant_id'] = null;
+        $userData['porter_id'] = null;
         $userData['role'] =  $user->getRoleNames()->first();
 
         if($user->hasRole("tenant")){
             $tenant = Tenant::where('user_id', $user->id)->first();
             if ($tenant) {
                 $userData['tenant_id'] = $tenant->id;
+            }
+        }
+        
+        if($user->hasRole("porter")){
+            $porter = Porter::where('user_id', $user->id)->first();
+            if ($porter) {
+                $userData['porter_id'] = $porter->id;
             }
         }
 

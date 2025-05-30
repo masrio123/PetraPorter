@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('bank_user_id')->constrained('bank_users');
             $table->foreignId('department_id')->constrained('departments');
             $table->string('porter_rating')->default('null');
+            $table->integer('user_id')->nullable();
             $table->boolean('porter_isOnline')->default(true);
             $table->timestamps();
         });
