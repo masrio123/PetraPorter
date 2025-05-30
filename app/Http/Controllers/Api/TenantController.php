@@ -80,17 +80,23 @@ class TenantController extends Controller
                 return response()->json(['message' => 'Tenant tidak ditemukan'], 404);
             }
 
+            // Validasi sesuai dengan data dari Flutter
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'tenant_location_id' => 'required|exists:tenant_locations,id',
-                'isOpen' => 'required|boolean',
+                'tenant_location_id' => 'required|integer|exists:tenant_locations,id',
+                'is_open' => 'required|boolean',
             ]);
 
-            $tenant->update($validated);
+            // Update tenant
+            $tenant->update([
+                'name' => $validated['name'],
+                'tenant_location_id' => $validated['tenant_location_id'],
+                'is_open' => $validated['is_open'],
+            ]);
 
             return response()->json([
                 'message' => 'Tenant berhasil diperbarui.',
-                'data' => $tenant
+                'data' => $tenant->load('tenantLocation'), // opsional: kalau kamu pakai relasi eager loading
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -104,6 +110,7 @@ class TenantController extends Controller
             ], 500);
         }
     }
+
 
     public function destroy($id)
     {

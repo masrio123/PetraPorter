@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('porters', function (Blueprint $table) {
-            $table->foreignId('bank_user_id')->after('department_id')->constrained('bank_users');
+            $table->dateTime('timeout_until')->nullable()->after('department_id');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('porters', function (Blueprint $table) {
-            //
+            $table->dropColumn('timeout_until');
         });
     }
 };

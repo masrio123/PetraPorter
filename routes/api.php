@@ -4,24 +4,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TenantController;
 
-use App\Http\Controllers\Api\OrderController as ApiOrderController;
-use App\Http\Controllers\Api\OrderItemController as ApiOrderItemController;
+use App\Http\Controllers\Api\TenantLocationController as ApiTenantLocationController;
 use App\Http\Controllers\Api\CartController as ApiCartController;
+use App\Http\Controllers\Api\OrderController as ApiOrderController;
 
 use App\Http\Controllers\Api\TenantController as ApiTenantController;
 use App\Http\Controllers\Api\ProductController as ApiProductController;
 use App\Http\Controllers\Api\CartItemController as ApiCartItemController;
 use App\Http\Controllers\Api\CategoryController as ApiCategoryController;
 use App\Http\Controllers\Api\CustomerController as ApiCustomerController;
+use App\Http\Controllers\Api\OrderItemController as ApiOrderItemController;
 use App\Http\Controllers\Api\DeliveryPointController as ApiDeliveryPointController;
 
 //Product
 Route::get('/products', [ApiProductController::class, 'fetchAllProducts']);
 Route::get('/products/{id}', [ApiProductController::class, 'getProductByTenant']);
-Route::put('/products/toggle/{id}', [ApiProductController::class, 'toggleAvailability']);
 Route::post('/products/store', [ApiProductController::class, 'storeProduct']);
-Route::put('products/{id}/edit', [ApiProductController::class, 'updateProduct']);
-Route::delete('products/{id}/delete', [ApiProductController::class, 'deleteProduct']);
+Route::put('products/{id}', [ApiProductController::class, 'updateProduct']);
+Route::delete('/products/{productId}', [ApiProductController::class, 'deleteProduct']);
 
 //Delivery Points
 Route::get('/delivery-points', [ApiDeliveryPointController::class, 'fetchDeliveryPoint']);
@@ -74,6 +74,8 @@ Route::get('/order-items', [ApiOrderItemController::class, 'index']);
 Route::get('/order-items/search-porter/{orderId}', [ApiOrderItemController::class, 'searchPorter']);
 Route::delete('/order-items/cancel/{id}', [ApiOrderItemController::class, 'cancelOrder']);
 
+//Tenant Location
+Route::get('/tenant-locations', [ApiTenantLocationController::class, 'index']);
 
 // Route::get('/products', [ProductController::class, 'fetchAllProducts']);
 // Route::get('/tenants', [TenantController::class, 'index']);

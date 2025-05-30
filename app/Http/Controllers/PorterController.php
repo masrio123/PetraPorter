@@ -75,14 +75,14 @@ class PorterController extends Controller
 
         if ($request->has('action')) {
             // Handle aksi timeout/cancel_timeout
-            if ($request->action === 'timeout') {
-                $porter->timeout_until = now()->addDays(2);
-            } elseif ($request->action === 'cancel_timeout') {
-                $porter->timeout_until = null;
-            }
-            $porter->save();
+                if ($request->action === 'timeout') {
+                    $porter->timeout_until = now()->addDays(2);
+                } elseif ($request->action === 'cancel_timeout') {
+                    $porter->timeout_until = null;
+                }
+                $porter->save();
 
-            return redirect()->route('dashboard.porters.index')->with('success', 'Status timeout berhasil diperbarui.');
+                return redirect()->route('dashboard.porters.index')->with('success', 'Status timeout berhasil diperbarui.');
         } else {
             // Validasi dasar
             $request->validate([

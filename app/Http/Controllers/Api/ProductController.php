@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Category;
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Validation\ValidationException;
 
@@ -124,64 +125,61 @@ class ProductController extends Controller
         }
     }
 
-        public function updateProduct(Request $request, $id): JsonResponse
-        {
-            try {
-                $product = Product::findOrFail($id);
+    public function updateProduct(Request $request, $id): JsonResponse
+    {
+        try {
+            $product = Product::findOrFail($id);
 
-                $validated = $request->validate([
-                    'name' => 'sometimes|string',
-                    'price' => 'sometimes|numeric',
-                    'tenant_id'    => 'required|exists:tenants,id',
-                    'isAvailable' => 'sometimes|boolean',
-                    'category_id' => 'sometimes|exists:categories,id',
-                ]);
-                $product->update($validated);
-                $product->load('category');
+            Log::info('Request all:', $request->all());
 
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Product updated successfully',
-                    'data' => $product
-                ]);
-            } catch (ValidationException $e) {
-                // Tangani kesalahan validasi
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors'  => $e->errors(),
-                ], 422);
-            } catch (\Exception $e) {
-                // Tangani error umum
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Something went wrong',
-                    'error'   => $e->getMessage(), // hilangkan ini di production jika sensitif
-                ], 500);
-            }
+            $validated = $request->validate([
+                'name' => 'sometimes|string',
+                'price' => 'sometimes|numeric',
+                'isAvailable' => 'sometimes|boolean',
+            ]);
+
+            Log::info('Validated data:', $validated);
+
+            $product->update($validated);
+            $product->load('category');
+
+            Log::info('Product after update:', $product->toArray());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product updated successfully',
+                'data' => $product
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error update product:', ['exception' => $e]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong',
+                'error'   => $e->getMessage(),
+            ], 500);
         }
-
-    public function deleteProduct($id): JsonResponse
-    {
-        $product = Product::findOrFail($id);
-        $product->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Product deleted successfully'
-        ]);
     }
-
-    public function toggleAvailability(Request $request, $id): JsonResponse
+    public function deleteProduct($productId): JsonResponse
     {
-        $product = Product::findOrFail($id);
-        $product->isAvailable = $request->input('isAvailable');
-        $product->save();
+        try {
+            $product = Product::findOrFail($productId);
+            $product->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Availability updated successfully',
-            'data' => $product,
-        ]);
-    }   
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk berhasil dihapus'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Produk tidak ditemukan'
+            ], 404);
+        }
+    }
 }
