@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Tenant;
+use App\Models\Customer;
 
 class AuthController extends Controller
 {
@@ -30,6 +31,7 @@ class AuthController extends Controller
         $userData = $user->toArray();
         $userData['tenant_id'] = null;
         $userData['porter_id'] = null;
+        $userData['customer_id'] = null;
         $userData['role'] =  $user->getRoleNames()->first();
 
         if($user->hasRole("tenant")){
@@ -43,6 +45,13 @@ class AuthController extends Controller
             $porter = Porter::where('user_id', $user->id)->first();
             if ($porter) {
                 $userData['porter_id'] = $porter->id;
+            }
+        }
+
+        if($user->hasRole("customer")){
+            $customer = Customer::where('user_id', $user->id)->first();
+            if ($customer) {
+                $userData['customer_id'] = $customer->id;
             }
         }
 

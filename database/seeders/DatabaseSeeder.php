@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
         Role::create(['name' => 'admin']);
         Role::create(['name' => 'tenant']);
         Role::create(['name' => 'porter']);
-        Role::create(['name' => 'user']);
+        Role::create(['name' => 'customer']);
 
         $admin = User::create([
             'name' => 'Administrator',
@@ -266,11 +266,20 @@ class DatabaseSeeder extends Seeder
             'Vania Yosephine',
         ];
 
-        foreach ($customerNames as $name) {
+        foreach ($customerNames as $key => $name) {
+            $user = User::create([
+                'name' => $name,
+                'email' => 'customer'.$key.'@gmail.com',
+                'password' => Hash::make('customer123'), 
+            ]);
+
+            $user->assignRole("customer");
+
             \App\Models\Customer::create([
                 'customer_name' => $name,
                 'department_id' => \App\Models\Department::inRandomOrder()->first()->id,
                 'bank_user_id' => \App\Models\BankUser::inRandomOrder()->first()->id,
+                'user_id' => $user->id
             ]);
         }
 
