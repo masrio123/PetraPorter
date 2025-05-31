@@ -51,7 +51,7 @@ class CustomerController extends Controller
     // Tampilkan detail customer
     public function show($id)
     {
-        $customer = Customer::with(['department', 'bankUser'])->find($id);
+        $customer = Customer::with(['department', 'bankUser'])->where('user_id', $id)->first();
 
         if (!$customer) {
             return response()->json(['message' => 'Customer tidak ditemukan'], 404);
