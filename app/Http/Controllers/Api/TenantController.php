@@ -169,7 +169,9 @@ class TenantController extends Controller
         }
 
         return response()->json([
-            $tenantLocation->location_name => $tenantLocation->tenants
+            'success' => true,
+            'message' => 'Tenant found',
+            'data' => $tenantLocation->tenants
         ]);
     }
 }
