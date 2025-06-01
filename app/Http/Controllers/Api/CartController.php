@@ -103,7 +103,7 @@ class CartController extends Controller
             return response()->json([
                 'cart_id' => $cart->id,
                 'customer_id' => $cart->customer_id ?? null,
-                'tenant_location' => $cart->tenantLocation->name ?? null,
+                'tenant_location' => $cart->tenantLocation->location_name ?? null,
                 'cart_items' => $cartItemsDisplay,
                 'total_payment' => [
                     'total_price' => $totalPrice,
@@ -115,23 +115,6 @@ class CartController extends Controller
             return response()->json(['message' => 'Cart tidak ditemukan.'], 404);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Terjadi kesalahan saat mengambil data cart.', 'error' => $e->getMessage()], 500);
-        }
-    }
-
-    public function deleteCart($id)
-    {
-        try {
-            $cart = Cart::findOrFail($id);
-            DB::transaction(function () use ($cart) {
-                $cart->items()->delete();
-                $cart->delete();
-            });
-
-            return response()->json(['message' => 'Cart and all items deleted.']);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['message' => 'Cart tidak ditemukan.'], 404);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Gagal menghapus cart.', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -247,7 +230,7 @@ class CartController extends Controller
                     'cart_id' => $cart->id,
                     'customer_id' => $cart->customer_id,
                     'customer_name' => $cart->customer->customer_name ?? '-',
-                    'tenant_location' => $cart->tenantLocation->name ?? '-',
+                    'tenant_location' => $cart->tenantLocation->location_name ?? '-',
                     'cart_items' => $cartItemsDisplay,
                     'total_payment' => [
                         'total_price' => $totalPrice,

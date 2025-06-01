@@ -24,8 +24,13 @@ class Porter extends Model
         return $this->belongsTo(Department::class);
     }
 
-       public function bankUser()
+    public function bankUser()
     {
         return $this->belongsTo(BankUser::class, 'bank_user_id');
+    }
+
+    public function orderHistory()
+    {
+        return $this->belongsTo(OrderHistory::class);
     }
 }

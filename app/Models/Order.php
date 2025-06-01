@@ -47,4 +47,10 @@ class Order extends Model
     {
         return $this->belongsTo(TenantLocation::class);
     }
+
+      public function orderHistories()
+    {
+        return $this->hasMany(OrderHistory::class);
+    }
+
 }

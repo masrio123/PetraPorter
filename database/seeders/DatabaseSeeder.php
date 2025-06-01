@@ -311,6 +311,7 @@ class DatabaseSeeder extends Seeder
             'picked_up',
             'delivered',
             'finished',
+            'canceled'
         ];
 
         foreach ($statuses as $status) {

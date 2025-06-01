@@ -3,32 +3,41 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Cart;
+use App\Models\Tenant;
+use App\Models\Product;
 use App\Models\CartItem;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 class CartItemController extends Controller
 {
-    public function addItem(Request $request)
+    public function addItems(Request $request)
     {
         try {
             $request->validate([
                 'cart_id' => 'required|exists:carts,id',
                 'product_id' => 'required|exists:products,id',
-                'tenant_id' => 'required|exists:tenants,id',
                 'quantity' => 'required|integer|min:1',
+                'tenant_id' => 'required|exists:tenants,id',
             ]);
 
-            $cart = Cart::findOrFail($request->cart_id);
+            $cart = Cart::with('tenantLocation')->findOrFail($request->cart_id);
+            $product = Product::findOrFail($request->product_id);
+            $tenant = Tenant::with('tenantLocation')->findOrFail($request->tenant_id);
 
-            // Ambil tenant yang dipilih
-            $tenant = \App\Models\Tenant::findOrFail($request->tenant_id);
-
-            // Cek apakah tenant location tenant sama dengan tenant_location_id di cart
+            // Cek apakah tenant berada di gedung yang sama
             if ($tenant->tenant_location_id !== $cart->tenant_location_id) {
-                // Ambil daftar tenant di gedung yang sama dengan cart
-                $allowedTenants = \App\Models\Tenant::where('tenant_location_id', $cart->tenant_location_id)
-                    ->get(['id', 'name']); // ambil id dan nama tenant saja
+                // Sesuaikan kolom yang diminta di tenantLocation, misal 'location_name' bukan 'name'
+                $allowedTenants = Tenant::with('tenantLocation:id,location_name') // pakai kolom sebenarnya
+                    ->where('tenant_location_id', $cart->tenant_location_id)
+                    ->get(['id', 'name', 'tenant_location_id']) // 'name' ini nama tenant, bukan location
+                    ->map(function ($t) {
+                        return [
+                            'id' => $t->id,
+                            'name' => $t->name, // nama tenant
+                            'location' => $t->tenantLocation->location_name ?? '(tidak diketahui)', // nama lokasi gedung
+                        ];
+                    });
 
                 return response()->json([
                     'message' => 'Jangan beda gedung! Kasian Porternya!',
@@ -36,35 +45,50 @@ class CartItemController extends Controller
                 ], 422);
             }
 
-            $item = CartItem::where('cart_id', $request->cart_id)
-                ->where('product_id', $request->product_id)
+            $cartItem = CartItem::where('cart_id', $cart->id)
+                ->where('product_id', $product->id)
+                ->where('tenant_id', $tenant->id)
                 ->first();
 
-            if ($item) {
-                $item->quantity += $request->quantity;
-                $item->save();
+            if ($cartItem) {
+                $cartItem->quantity += $request->quantity;
+                $cartItem->save();
             } else {
-                $item = CartItem::create([
-                    'cart_id' => $request->cart_id,
-                    'product_id' => $request->product_id,
-                    'tenant_id' => $request->tenant_id,
+                $cartItem = CartItem::create([
+                    'cart_id' => $cart->id,
+                    'product_id' => $product->id,
+                    'tenant_id' => $tenant->id,
                     'quantity' => $request->quantity,
                 ]);
             }
 
-            return response()->json(['message' => 'Item added to cart', 'item' => $item]);
+            return response()->json([
+                'message' => 'Item added to cart',
+                'item' => [
+                    'id' => $cartItem->id,
+                    'tenant_id' => $cartItem->tenant_id,
+                    'cart_id' => $cartItem->cart_id,
+                    'product_id' => $cartItem->product_id,
+                    'quantity' => $cartItem->quantity,
+                ],
+            ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
-                'message' => 'Validation error.',
-                'errors' => $e->errors()
+                'message' => 'Validasi gagal.',
+                'errors' => $e->errors(),
             ], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Data tidak ditemukan.',
+            ], 404);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Something went wrong.',
-                'error' => $e->getMessage()
+                'message' => 'Gagal menambahkan item ke cart.',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
+
 
     public function deleteByTenantAndProduct($tenantId, $productId)
     {

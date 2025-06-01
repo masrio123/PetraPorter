@@ -9,56 +9,121 @@ use Illuminate\Http\Request;
 class OrderController extends Controller
 {
     // Tampilkan semua order
-    public function index()
+    public function showAll()
     {
-        $orders = Order::with(['items.product', 'status', 'customer', 'tenantLocation'])->get();
+        try {
+            $orders = Order::with([
+                'items.product',
+                'items.tenant', // pastikan relasi tenant ada di OrderItem
+                'status',
+                'customer',
+                'tenantLocation'
+            ])->get();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'List of all orders',
-            'data' => $orders,
-        ]);
-    }
+            $formattedOrders = $orders->map(function ($order) {
+                // Kelompokkan items berdasarkan tenant_id
+                $groupedItems = $order->items->groupBy('tenant_id')->map(function ($items, $tenantId) {
+                    return [
+                        'tenant_id' => (int) $tenantId,
+                        'tenant_name' => optional($items->first()->tenant)->name,
+                        'items' => $items->map(function ($item) {
+                            return [
+                                'product_id' => $item->product_id,
+                                'product_name' => $item->product->name,
+                                'quantity' => $item->quantity,
+                                'price' => $item->price,
+                                'subtotal' => $item->subtotal,
+                            ];
+                        })->values(),
+                    ];
+                })->values();
 
-    // Tampilkan detail order berdasarkan ID
-    public function show($id)
-    {
-        $order = Order::with(['items.product', 'status', 'customer', 'tenantLocation'])->find($id);
+                return [
+                    'order_id' => $order->id,
+                    'cart_id' => $order->cart_id,
+                    'customer_id' => $order->customer->id,
+                    'customer_name' => $order->customer->customer_name,
+                    'tenant_location_id' => $order->tenantLocation->id,
+                    'tenant_location_name' => $order->tenantLocation->location_name,
+                    'items' => $groupedItems,
+                    'total_price' => $order->total_price,
+                    'shipping_cost' => $order->shipping_cost,
+                    'grand_total' => $order->grand_total,
+                ];
+            });
 
-        if (!$order) {
+            return response()->json([
+                'success' => true,
+                'message' => 'List of all orders',
+                'data' => $formattedOrders,
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found',
-            ], 404);
+                'message' => 'Gagal mengambil data orders.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Order detail',
-            'data' => $order,
-        ]);
     }
 
-    // Hapus (clear) order berdasarkan ID
-    public function destroy($id)
+    public function fetchOrderById($id)
     {
-        $order = Order::find($id);
+        try {
+            $order = Order::with([
+                'items.product',
+                'items.tenant',
+                'status',
+                'customer',
+                'tenantLocation'
+            ])->find($id);
 
-        if (!$order) {
+            if (!$order) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order not found',
+                ], 404);
+            }
+
+            $groupedItems = $order->items->groupBy('tenant_id')->map(function ($items, $tenantId) {
+                return [
+                    'tenant_id' => (int) $tenantId,
+                    'tenant_name' => optional($items->first()->tenant)->name,
+                    'items' => $items->map(function ($item) {
+                        return [
+                            'product_id' => $item->product_id,
+                            'product_name' => $item->product->name,
+                            'quantity' => $item->quantity,
+                            'price' => $item->price,
+                            'subtotal' => $item->subtotal,
+                        ];
+                    })->values(),
+                ];
+            })->values();
+
+            $formattedOrder = [
+                'order_id' => $order->id,
+                'cart_id' => $order->cart_id,
+                'customer_id' => $order->customer->id,
+                'customer_name' => $order->customer->customer_name,
+                'tenant_location_id' => $order->tenantLocation->id,
+                'tenant_location_name' => $order->tenantLocation->location_name,
+                'items' => $groupedItems,
+                'total_price' => $order->total_price,
+                'shipping_cost' => $order->shipping_cost,
+                'grand_total' => $order->grand_total,
+            ];
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order detail from order_id: ' . $order->id,
+                'data' => $formattedOrder,
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found',
-            ], 404);
+                'message' => 'Gagal mengambil detail order.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        // Bisa ditambah validasi, misal hanya bisa hapus order yang belum selesai
-
-        $order->items()->delete();
-        $order->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Order and its items deleted successfully',
-        ]);
     }
 }

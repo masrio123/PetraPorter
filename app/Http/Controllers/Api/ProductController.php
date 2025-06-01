@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Tenant;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -42,13 +43,20 @@ class ProductController extends Controller
 
     public function getProductByTenant($id): JsonResponse
     {
+        $tenant = Tenant::find($id);
+        if (!$tenant) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tenant not found.',
+                'data' => null,
+            ], 404);
+        }
+
         $products = Product::select([
             'products.id',
             'products.name',
             'products.price',
             'products.isAvailable',
-            'products.created_at',
-            'products.updated_at',
             'c.id as category_id',
             'c.category_name',
         ])
@@ -56,7 +64,6 @@ class ProductController extends Controller
             ->where('products.tenant_id', $id)
             ->get();
 
-        // Grouping products by category_id
         $grouped = [];
 
         foreach ($products as $product) {
@@ -75,17 +82,15 @@ class ProductController extends Controller
                 'name' => $product->name,
                 'price' => $product->price,
                 'is_available' => $product->isAvailable,
-                'created_at' => $product->created_at,
-                'updated_at' => $product->updated_at,
             ];
         }
 
-        // Re-index to array
-        $data = array_values($grouped);
+        $data = [
+            'tenant_name' => $tenant->name,
+            'categories' => array_values($grouped),
+        ];
 
         return response()->json([
-            'success' => true,
-            'message' => 'Products grouped by category for tenant ID: ' . $id,
             'data' => $data,
         ]);
     }

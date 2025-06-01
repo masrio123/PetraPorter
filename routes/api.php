@@ -30,7 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products/store', [ApiProductController::class, 'storeProduct']);
     Route::put('products/{id}', [ApiProductController::class, 'updateProduct']);
     Route::delete('/products/{productId}', [ApiProductController::class, 'deleteProduct']);
-
+        
     //Delivery Points
     Route::get('/delivery-points', [ApiDeliveryPointController::class, 'fetchDeliveryPoint']);
     Route::post('/delivery-points/store', [ApiDeliveryPointController::class, 'store']);
@@ -45,7 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/allCarts', [ApiCartController::class, 'getAllCarts']);
 
     //Cart Item
-    Route::post('/cart-items', [ApiCartItemController::class, 'addItem']);
+    Route::post('/cart-items', [ApiCartItemController::class, 'addItems']);
     Route::delete('/cart-items/{tenantId}/{productId}', action: [ApiCartItemController::class, 'deleteByTenantAndProduct']);
 
     //Tenants
@@ -70,17 +70,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/categories', [ApiCategoryController::class, 'fetchCategories']);
     Route::get('/tenants/{id}/categories-with-menus', [ApiCategoryController::class, 'fetchCategoriesWithMenusByTenant']);
 
-    // Group route dengan prefix dan middleware auth jika diperlukan
     Route::prefix('orders')->group(function () {
-        Route::get('/', [ApiOrderController::class, 'index']);
-        Route::get('{id}', [ApiOrderController::class, 'show']);
-        Route::delete('{id}', [ApiOrderController::class, 'destroy']);
-        Route::get('{id}/items', [ApiOrderItemController::class, 'getByOrder']);
+        Route::get('/', [ApiOrderController::class, 'showAll']);
+        Route::get('{id}', [ApiOrderController::class, 'fetchOrderById']);
+        Route::get('search-porter/{id}', [ApiOrderItemController::class, 'searchPorter']);
+        Route::post('/cancel/{id}', [ApiOrderItemController::class, 'cancelOrder']);
+        Route::get('/canceled', [ApiOrderItemController::class, 'showCanceledOrders']);
     });
 
-    Route::get('/order-items', [ApiOrderItemController::class, 'index']);
-    Route::get('/order-items/search-porter/{orderId}', [ApiOrderItemController::class, 'searchPorter']);
-    Route::delete('/order-items/cancel/{id}', [ApiOrderItemController::class, 'cancelOrder']);
+    
+   
 
     //Tenant Location
     Route::get('/tenant-locations', [ApiTenantLocationController::class, 'index']);
