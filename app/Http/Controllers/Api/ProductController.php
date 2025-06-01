@@ -41,59 +41,64 @@ class ProductController extends Controller
         ]);
     }
 
-    public function getProductByTenant($id): JsonResponse
+    public function getProductsByTenantLocation($locationId): JsonResponse
     {
-        $tenant = Tenant::find($id);
-        if (!$tenant) {
+        // Cari tenant location berdasarkan ID, sekaligus relasi tenants dan produk + kategori mereka
+        $location = \App\Models\TenantLocation::with(['tenants.products.category'])
+            ->find($locationId);
+
+        if (!$location) {
             return response()->json([
                 'success' => false,
-                'message' => 'Tenant not found.',
+                'message' => 'Tenant location not found',
                 'data' => null,
             ], 404);
         }
 
-        $products = Product::select([
-            'products.id',
-            'products.name',
-            'products.price',
-            'products.isAvailable',
-            'c.id as category_id',
-            'c.category_name',
-        ])
-            ->join('categories as c', 'products.category_id', '=', 'c.id')
-            ->where('products.tenant_id', $id)
-            ->get();
+        $tenantsData = [];
 
-        $grouped = [];
+        foreach ($location->tenants as $tenant) {
+            $categories = [];
 
-        foreach ($products as $product) {
-            $categoryId = $product->category_id;
+            foreach ($tenant->products as $product) {
+                $category = $product->category;
+                if (!$category) continue;
 
-            if (!isset($grouped[$categoryId])) {
-                $grouped[$categoryId] = [
-                    'id' => $product->category_id,
-                    'category_name' => $product->category_name,
-                    'products' => [],
+                $categoryId = $category->id;
+
+                if (!isset($categories[$categoryId])) {
+                    $categories[$categoryId] = [
+                        'id' => $categoryId,
+                        'category_name' => $category->category_name,
+                        'products' => [],
+                    ];
+                }
+
+                $categories[$categoryId]['products'][] = [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $product->price,
+                    'is_available' => $product->isAvailable,
                 ];
             }
 
-            $grouped[$categoryId]['products'][] = [
-                'id' => $product->id,
-                'name' => $product->name,
-                'price' => $product->price,
-                'is_available' => $product->isAvailable,
+            $tenantsData[] = [
+                'tenant_id' => $tenant->id,
+                'tenant_name' => $tenant->name,
+                'categories' => array_values($categories),
             ];
         }
 
-        $data = [
-            'tenant_name' => $tenant->name,
-            'categories' => array_values($grouped),
-        ];
-
         return response()->json([
-            'data' => $data,
+            'success' => true,
+            'message' => 'Tenants and products for location id: ' . $locationId,
+            'data' => [
+                'location_name' => $location->location_name,
+                'tenants' => $tenantsData,
+            ],
         ]);
     }
+
     public function storeProduct(Request $request)
     {
         try {

@@ -26,10 +26,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Product
     Route::get('/products', [ApiProductController::class, 'fetchAllProducts']);
-    Route::get('/products/{id}', [ApiProductController::class, 'getProductByTenant']);
+Route::get('/products/{id}/tenants-products', [ApiProductController::class, 'getProductsByTenantLocation']);
     Route::post('/products/store', [ApiProductController::class, 'storeProduct']);
     Route::put('products/{id}', [ApiProductController::class, 'updateProduct']);
-    Route::delete('/products/{productId}', [ApiProductController::class, 'deleteProduct']);
+    Route::delete('/products/{productId}', action: [ApiProductController::class, 'deleteProduct']);
         
     //Delivery Points
     Route::get('/delivery-points', [ApiDeliveryPointController::class, 'fetchDeliveryPoint']);
