@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('order_history_items', function (Blueprint $table) {
-            $table->foreignId('order_history_id')->after('grand_total')->constrained('order_histories');
+        Schema::table('order_histories', function (Blueprint $table) {
+            $table->dropForeign(['order_id']); // drop FK constraint
+            $table->dropColumn('order_id');    // drop kolom
         });
     }
 
@@ -21,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('order_history_items', function (Blueprint $table) {
+        Schema::table('order_histories', function (Blueprint $table) {
             //
         });
     }

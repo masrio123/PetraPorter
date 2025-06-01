@@ -66,122 +66,43 @@ class OrderItemController extends Controller
 
     public function cancelOrder($orderId)
     {
-        DB::beginTransaction();
-
-        try {
-            $order = Order::with([
-                'items.product.tenant.tenantLocation',
-                'customer',
-                'status',
-                'orderHistories.items'
-            ])->find($orderId);
-
-            if (!$order) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Order not found.',
-                ], 404);
-            }
-
-            $processedStatuses = ['completed', 'delivered'];
-            $currentStatus = $order->status->order_status ?? '';
-
-            if (in_array($currentStatus, $processedStatuses)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Order already processed and cannot be canceled.',
-                ], 400);
-            }
-
-            $canceledStatus = OrderStatus::where('order_status', 'canceled')->first();
-            if (!$canceledStatus) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Canceled status not found.',
-                ], 500);
-            }
-
-            // Hapus histori lama
-            foreach ($order->orderHistories as $oldHistory) {
-                $oldHistory->items()->delete();
-                $oldHistory->delete();
-            }
-
-            // Tambahkan histori pembatalan
-            $history = OrderHistory::create([
-                'order_id' => $order->id,
-                'order_status_id' => $canceledStatus->id,
-                'porter_id' => $order->porter_id ?? null,
-            ]);
-
-            foreach ($order->items as $item) {
-                $product = $item->product;
-                $tenant = $product->tenant;
-
-                OrderHistoryItem::create([
-                    'order_history_id'     => $history->id,
-                    'customer_id'          => $order->customer_id,
-                    'user_id'              => $order->customer->user_id ?? null,
-                    'tenant_location_name' => $tenant->tenantLocation->location_name ?? 'N/A',
-                    'tenant_name'          => $tenant->name ?? 'Unknown Tenant',
-                    'product_name'         => $product->name,
-                    'quantity'             => $item->quantity,
-                    'price'                => 0,
-                    'total_price'          => 0,
-                    'shipping_cost'        => 0,
-                    'grand_total'          => 0,
-                ]);
-            }
-
-            // Update status dan kosongkan biaya
-            $order->status()->associate($canceledStatus);
-            $order->shipping_cost = 0;
-            $order->grand_total = 0;
-            $order->total_price = 0;
-            $order->save();
-
-            // Hapus item order
-            $order->items()->delete();
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Order has been successfully canceled.',
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Something went wrong while canceling the order.',
-                'error' => $e->getMessage(),
-            ], 500);
+        $order = Order::with(['items.product.tenant.tenantLocation', 'customer', 'status'])->find($orderId);
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Order not found'], 404);
         }
-    }
 
-
-    public function showCanceledOrders()
-    {
         $canceledStatus = OrderStatus::where('order_status', 'canceled')->first();
-
         if (!$canceledStatus) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Canceled status not found.',
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Canceled status not found'], 500);
         }
 
-        $orders = OrderHistory::with([
-            'items', // semua item produk dalam histori ini
-            'customer.department', // relasi ke customer & department
-        ])
-            ->where('order_status_id', $canceledStatus->id)
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $orders,
+        // Simpan history order tanpa order_id
+        $history = OrderHistory::create([
+            'customer_id' => $order->customer_id,
+            'customer_name' => $order->customer->customer_name,
+            'tenant_location_name' => $order->tenantLocation->location_name ?? 'N/A',
+            'order_status_id' => $canceledStatus->id,
+            'total_price' => 0,
+            'shipping_cost' => 0,
+            'grand_total' => 0,
         ]);
+
+        foreach ($order->items as $item) {
+            $history->items()->create([
+                'product_id' => $item->product_id,          // wajib diisi
+                'product_name' => $item->product->name,
+                'quantity' => $item->quantity,
+                'price' => 0,
+                'total_price' => 0,
+                'shipping_cost' => 0,
+                'grand_total' => 0,
+            ]);
+        }
+
+        // Hapus order asli beserta itemnya
+        $order->items()->delete();
+        $order->delete();
+
+        return response()->json(['success' => true, 'message' => 'Order canceled and moved to history']);
     }
 }

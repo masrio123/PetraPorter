@@ -3,41 +3,30 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderHistoryItem extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'order_history_id',
-        'customer_id',
-        'user_id',
-        'tenant_location_name',
-        'tenant_name',
-        'product_name',
+        'product_id',
         'quantity',
         'price',
         'total_price',
-        'shipping_cost',
-        'grand_total',
     ];
 
-    // Relasi ke histori utama
-    public function orderHistory()
+    public function orderHistory(): BelongsTo
     {
         return $this->belongsTo(OrderHistory::class);
     }
 
-    // Relasi ke customer
-    public function customer()
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Product::class);
     }
 
-    // Relasi ke user yang mungkin melakukan transaksi (jika berbeda dari customer)
-    public function user()
+    public function tenant()
     {
-        return $this->belongsTo(Customer::class, 'user_id');
+        return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 }

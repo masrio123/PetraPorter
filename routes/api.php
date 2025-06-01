@@ -4,10 +4,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TenantController;
 
-use App\Http\Controllers\Api\TenantLocationController as ApiTenantLocationController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\OrderHistoryController as ApiOrderHistoryController;
 use App\Http\Controllers\Api\CartController as ApiCartController;
-use App\Http\Controllers\Api\OrderController as ApiOrderController;
 
+use App\Http\Controllers\Api\OrderController as ApiOrderController;
 use App\Http\Controllers\Api\TenantController as ApiTenantController;
 use App\Http\Controllers\Api\ProductController as ApiProductController;
 use App\Http\Controllers\Api\CartItemController as ApiCartItemController;
@@ -15,7 +16,7 @@ use App\Http\Controllers\Api\CategoryController as ApiCategoryController;
 use App\Http\Controllers\Api\CustomerController as ApiCustomerController;
 use App\Http\Controllers\Api\OrderItemController as ApiOrderItemController;
 use App\Http\Controllers\Api\DeliveryPointController as ApiDeliveryPointController;
-use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\TenantLocationController as ApiTenantLocationController;
 
 // login
 Route::post('/login', [AuthController::class, 'login']);
@@ -26,11 +27,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Product
     Route::get('/products', [ApiProductController::class, 'fetchAllProducts']);
-Route::get('/products/{id}/tenants-products', [ApiProductController::class, 'getProductsByTenantLocation']);
+    Route::get('/products/{id}/tenants-products', [ApiProductController::class, 'getProductsByTenantLocation']);
     Route::post('/products/store', [ApiProductController::class, 'storeProduct']);
     Route::put('products/{id}', [ApiProductController::class, 'updateProduct']);
     Route::delete('/products/{productId}', action: [ApiProductController::class, 'deleteProduct']);
-        
+
     //Delivery Points
     Route::get('/delivery-points', [ApiDeliveryPointController::class, 'fetchDeliveryPoint']);
     Route::post('/delivery-points/store', [ApiDeliveryPointController::class, 'store']);
@@ -76,14 +77,13 @@ Route::get('/products/{id}/tenants-products', [ApiProductController::class, 'get
         Route::get('search-porter/{id}', [ApiOrderItemController::class, 'searchPorter']);
         Route::post('/cancel/{id}', [ApiOrderItemController::class, 'cancelOrder']);
         Route::get('/canceled', [ApiOrderItemController::class, 'showCanceledOrders']);
+        Route::get('/history/{customerId}', [ApiOrderHistoryController::class, 'getHistoryByCustId']);
     });
-
-    
-   
 
     //Tenant Location
     Route::get('/tenant-locations', [ApiTenantLocationController::class, 'index']);
 });
+
 
 
 // Route::get('/products', [ProductController::class, 'fetchAllProducts']);

@@ -2,43 +2,38 @@
 
 namespace App\Models;
 
-use App\Models\OrderHistoryItem;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderHistory extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'order_id',
-        'porter_id',
         'order_status_id',
+        'customer_id',
+        'total_price',
         'shipping_cost',
         'grand_total',
     ];
 
-    // Relasi ke order asli
-    public function order()
+    public function items(): HasMany
+    {
+        return $this->hasMany(OrderHistoryItem::class);
+    }
+
+    public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
     }
 
-    // Relasi ke porter
-    public function porter()
-    {
-        return $this->belongsTo(Porter::class);
-    }
-
-    // Relasi ke status
-    public function status()
+    public function status(): BelongsTo
     {
         return $this->belongsTo(OrderStatus::class, 'order_status_id');
     }
 
-    // Relasi ke item histori
-    public function items()
+    public function customer(): BelongsTo
     {
-        return $this->hasMany(OrderHistoryItem::class);
+        return $this->belongsTo(Customer::class);
     }
 }

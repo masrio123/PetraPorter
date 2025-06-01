@@ -17,7 +17,8 @@ class OrderController extends Controller
                 'items.tenant', // pastikan relasi tenant ada di OrderItem
                 'status',
                 'customer',
-                'tenantLocation'
+                'tenantLocation',
+                'status'
             ])->get();
 
             $formattedOrders = $orders->map(function ($order) {
@@ -47,6 +48,7 @@ class OrderController extends Controller
                     'tenant_location_name' => $order->tenantLocation->location_name,
                     'items' => $groupedItems,
                     'total_price' => $order->total_price,
+                    'order_status' => optional(value: $order->status)->order_status,
                     'shipping_cost' => $order->shipping_cost,
                     'grand_total' => $order->grand_total,
                 ];
@@ -74,7 +76,8 @@ class OrderController extends Controller
                 'items.tenant',
                 'status',
                 'customer',
-                'tenantLocation'
+                'tenantLocation',
+                'status'
             ])->find($id);
 
             if (!$order) {
@@ -107,6 +110,7 @@ class OrderController extends Controller
                 'customer_name' => $order->customer->customer_name,
                 'tenant_location_id' => $order->tenantLocation->id,
                 'tenant_location_name' => $order->tenantLocation->location_name,
+                'order_status' => optional($order->status)->order_status,
                 'items' => $groupedItems,
                 'total_price' => $order->total_price,
                 'shipping_cost' => $order->shipping_cost,
