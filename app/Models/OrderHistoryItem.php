@@ -10,12 +10,14 @@ class OrderHistoryItem extends Model
     protected $fillable = [
         'order_history_id',
         'product_id',
+        'product_name',
+        'tenant_name',
         'quantity',
         'price',
         'total_price',
     ];
 
-    public function orderHistory(): BelongsTo
+    public function history(): BelongsTo
     {
         return $this->belongsTo(OrderHistory::class);
     }

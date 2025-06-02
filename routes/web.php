@@ -8,7 +8,7 @@ use App\Http\Controllers\BankUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeliveryPointController;
 
-Route::get('/', function () {
+Route::post('/', function () {
     return view('welcome');
 });
 

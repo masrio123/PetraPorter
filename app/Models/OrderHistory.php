@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class OrderHistory extends Model
 {
     protected $fillable = [
-        'order_id',
         'order_status_id',
         'customer_id',
+        'customer_name',
+        'tenant_location_name',
         'total_price',
         'shipping_cost',
         'grand_total',
