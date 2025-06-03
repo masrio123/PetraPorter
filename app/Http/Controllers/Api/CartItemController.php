@@ -18,13 +18,13 @@ class CartItemController extends Controller
                 'cart_id' => 'required|exists:carts,id',
                 'product_id' => 'required|exists:products,id',
                 'quantity' => 'required|integer|min:1',
-                'tenant_id' => 'required|exists:tenants,id',
             ]);
 
             $cart = Cart::with('tenantLocation')->findOrFail($request->cart_id);
+            
             $product = Product::findOrFail($request->product_id);
-            $tenant = Tenant::with('tenantLocation')->findOrFail($request->tenant_id);
-
+            $tenant = Tenant::where('id', $product->tenant_id)->first();
+            
             // Cek apakah tenant berada di gedung yang sama
             if ($tenant->tenant_location_id !== $cart->tenant_location_id) {
                 // Sesuaikan kolom yang diminta di tenantLocation, misal 'location_name' bukan 'name'
