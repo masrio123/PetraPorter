@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
         $admin = User::create([
             'name' => 'Administrator',
             'email' => 'admin@gmail.com',
-            'password' => Hash::make('admin123'), 
+            'password' => Hash::make('admin123'),
         ]);
 
         $admin->assignRole('admin');
@@ -46,40 +46,24 @@ class DatabaseSeeder extends Seeder
                 "location_name" => 'Gedung ' . $location
             ]);
         }
-
-        // Seed Tenants
+        
+        //Seed Tenant
         $tenants = [
             "Kobakso",
             "Bakpao Gracias",
             "Bakso Petra",
-            "Ndokee Express",
-            "Ndokee Express",
+            "Ndokee Express 1",
+            "Ndokee Express 2",
             "Depot Mapan",
             "Pangsit Mie Bu Kusni",
             "Tong Tji",
             "Mie Pinangsia Aboen",
-            "Ndokee Express",
+            "Ndokee Express 3",
             "Pangsit Mie Tenda Biru",
             "Singapore Crispy Snacks"
         ];
-        foreach ($tenants as $key => $tenant) {
-            $user = User::create([
-                'name' => 'Tenant '. $tenant,
-                'email' => 'tenant'.$key.'@gmail.com',
-                'password' => Hash::make('tenant123'), 
-            ]);
 
-            $user->assignRole("tenant");
-
-            Tenant::create([
-                "name" => $tenant,
-                'tenant_location_id' => TenantLocation::inRandomOrder()->first()->id,
-                'user_id' => $user->id,
-                'isOpen' => true
-            ]);
-        }
-
-        // Seed Categories & Products
+        // Simpan semua kategori & menu dulu (untuk digunakan ulang)
         $categories = [
             [
                 'name' => 'Makanan',
@@ -153,20 +137,49 @@ class DatabaseSeeder extends Seeder
             ]
         ];
 
+        // Buat kategori terlebih dahulu agar tidak duplikat
+        $categoryMap = [];
         foreach ($categories as $category) {
-            $cat = Category::create([
-                'category_name' => $category['name'],
+            $createdCategory = Category::create([
+                'category_name' => $category['name']
             ]);
-            $tenant_id = Tenant::inRandomOrder()->first()->id;
-            foreach ($category['menus'] as $menu) {
-                Product::create([
-                    'name' => $menu,
-                    'price' => rand(5000, 50000),
-                    'tenant_id' => $tenant_id,
-                    'category_id' => $cat->id,
-                ]);
+            $categoryMap[$category['name']] = [
+                'model' => $createdCategory,
+                'menus' => $category['menus']
+            ];
+        }
+
+        // Buat tenant + user + assign semua menu
+        foreach ($tenants as $key => $tenantName) {
+            $user = User::create([
+                'name' => 'Tenant ' . $tenantName,
+                'email' => 'tenant' . $key . '@gmail.com',
+                'password' => Hash::make('tenant123'),
+            ]);
+
+            $user->assignRole('tenant');
+
+            $tenant = Tenant::create([
+                'name' => $tenantName,
+                'tenant_location_id' => TenantLocation::inRandomOrder()->first()->id,
+                'user_id' => $user->id,
+                'isOpen' => true
+            ]);
+
+            // Tambahkan semua menu untuk tenant ini
+            foreach ($categoryMap as $categoryData) {
+                $category = $categoryData['model'];
+                foreach ($categoryData['menus'] as $menuName) {
+                    Product::create([
+                        'name' => $menuName,
+                        'price' => rand(5000, 50000),
+                        'tenant_id' => $tenant->id,
+                        'category_id' => $category->id
+                    ]);
+                }
             }
         }
+
 
         // Seed Departments
         $departments = [
@@ -269,8 +282,8 @@ class DatabaseSeeder extends Seeder
         foreach ($customerNames as $key => $name) {
             $user = User::create([
                 'name' => $name,
-                'email' => 'customer'.$key.'@gmail.com',
-                'password' => Hash::make('customer123'), 
+                'email' => 'customer' . $key . '@gmail.com',
+                'password' => Hash::make('customer123'),
             ]);
 
             $user->assignRole("customer");
@@ -289,8 +302,8 @@ class DatabaseSeeder extends Seeder
         foreach ($bankUsers as $index => $bankUser) {
             $user = User::create([
                 'name' => $bankUser->username,
-                'email' => 'porter'.$index.'@gmail.com',
-                'password' => Hash::make('porter123'), 
+                'email' => 'porter' . $index . '@gmail.com',
+                'password' => Hash::make('porter123'),
             ]);
 
             $user->assignRole("porter");
@@ -305,13 +318,14 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-         $statuses = [
+        $statuses = [
             'received',
             'processing',
             'picked_up',
             'delivered',
             'finished',
-            'canceled'
+            'canceled',
+            'waiting'
         ];
 
         foreach ($statuses as $status) {
@@ -321,6 +335,5 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ]);
         }
-    
     }
 }

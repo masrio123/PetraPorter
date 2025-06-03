@@ -253,4 +253,33 @@ class CartController extends Controller
             ], 500);
         }
     }
+
+    public function deleteCart($id)
+    {
+        try {
+            $cart = Cart::with('items')->findOrFail($id);
+
+            // Hapus semua item dalam cart terlebih dahulu
+            $cart->items()->delete();
+
+            // Hapus cart-nya
+            $cart->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cart dan item-item di dalamnya berhasil dihapus.',
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cart tidak ditemukan.',
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus cart.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
