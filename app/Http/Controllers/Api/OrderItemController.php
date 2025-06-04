@@ -26,6 +26,14 @@ class OrderItemController extends Controller
             ], 404);
         }
 
+        // Cek apakah order sudah punya porter assigned
+        if ($order->porter_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order ini sudah memiliki porter yang ditugaskan.',
+            ], 400);
+        }
+
         // Cari porter online secara acak
         $porter = Porter::with('department')
             ->where('porter_isOnline', true)
@@ -53,11 +61,20 @@ class OrderItemController extends Controller
         ]);
     }
 
+
     public function cancelOrder($orderId)
     {
         $order = Order::with(['items.product.tenant', 'customer', 'tenantLocation'])->find($orderId);
         if (!$order) {
             return response()->json(['success' => false, 'message' => 'Order not found'], 404);
+        }
+
+        // Cegah cancel jika order sudah diterima porter (status ID 1)
+        if ($order->order_status_id == 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order sudah diterima porter dan tidak bisa dibatalkan.',
+            ], 400);
         }
 
         $canceledStatus = OrderStatus::where('order_status', 'canceled')->first();
@@ -82,7 +99,7 @@ class OrderItemController extends Controller
                 'tenant_name' => $item->product->tenant->name ?? 'Unknown Tenant',
                 'quantity' => $item->quantity,
                 'price' => $item->price,
-                'total_price' => $item->subtotal, // gunakan 'subtotal' dari OrderItem
+                'total_price' => $item->subtotal,
             ]);
         }
 

@@ -46,140 +46,125 @@ class DatabaseSeeder extends Seeder
                 "location_name" => 'Gedung ' . $location
             ]);
         }
-        
-        //Seed Tenant
-        $tenants = [
-            "Kobakso",
-            "Bakpao Gracias",
-            "Bakso Petra",
-            "Ndokee Express 1",
-            "Ndokee Express 2",
-            "Depot Mapan",
-            "Pangsit Mie Bu Kusni",
-            "Tong Tji",
-            "Mie Pinangsia Aboen",
-            "Ndokee Express 3",
-            "Pangsit Mie Tenda Biru",
-            "Singapore Crispy Snacks"
-        ];
 
-        // Simpan semua kategori & menu dulu (untuk digunakan ulang)
-        $categories = [
+        //Seed Tenant
+        // Buat kategori (sekali saja)
+        $kategoriMakanan = Category::create(['category_name' => 'Makanan']);
+        $kategoriMinuman = Category::create(['category_name' => 'Minuman']);
+
+        // Ambil lokasi gedung (P, Q, W, T)
+        $lokasiGedung = TenantLocation::whereIn('location_name', ['Gedung P', 'Gedung Q', 'Gedung W', 'Gedung T'])->get()->keyBy('location_name');
+
+        // Data tenant dibagi per gedung
+        $tenantData = [
             [
-                'name' => 'Makanan',
+                'name' => 'Kobakso',
+                'gedung' => 'Gedung P',
                 'menus' => [
-                    'Ayam Geprek',
-                    'Seblak Jeletet',
-                    'Mie Setan',
-                    'Sambal Bakar Spesial',
-                    'Tahu Crispy',
-                    'Cireng Isi',
-                    'Kentang Goreng',
-                    'Bakwan Sayur',
-                    'Nasi Goreng Spesial',
-                    'Sate Ayam',
-                    'Rendang Daging',
-                    'Ayam Bakar Madu',
-                    'Spaghetti Bolognese',
-                    'Sushi Roll',
-                    'Burger Daging Sapi',
-                    'Pizza Keju',
-                    'Gudeg Jogja',
-                    'Pempek Palembang',
-                    'Lontong Sayur',
-                    'Rawon Surabaya',
-                    'Pisang Coklat',
-                    'Kue Cubit',
-                    'Martabak Manis',
-                    'Pudding Coklat',
-                    'Lemper Ayam',
-                    'Nagasari',
-                    'Klepon',
-                    'Pastel Goreng',
-                    'Mie Ayam Komplit',
-                    'Mie Goreng Jawa',
-                    'Mie Kocok Bandung',
-                    'Ramen Pedas',
-                    'Nasi Uduk',
-                    'Nasi Kuning',
-                    'Nasi Liwet',
-                    'Nasi Campur Bali',
-                    'Ikan Bakar Rica',
-                    'Cumi Goreng Tepung',
-                    'Udang Saus Padang',
-                    'Kerang Rebus',
-                    'Gado-Gado',
-                    'Tumis Kangkung',
-                    'Sayur Lodeh',
-                    'Tahu Tempe Bacem'
-                ]
+                    ['name' => 'Mie Ayam Bakso', 'category' => $kategoriMakanan],
+                    ['name' => 'Bakso Urat Pedas', 'category' => $kategoriMakanan],
+                    ['name' => 'Es Teh Manis', 'category' => $kategoriMinuman],
+                    ['name' => 'Es Jeruk', 'category' => $kategoriMinuman],
+                ],
             ],
             [
-                'name' => 'Minuman',
+                'name' => 'Bakpao Gracias',
+                'gedung' => 'Gedung P',
                 'menus' => [
-                    'Es Teh Manis',
-                    'Es Kopi Susu',
-                    'Thai Tea',
-                    'Es Cincau',
-                    'Teh Tawar Hangat',
-                    'Kopi Tubruk',
-                    'Wedang Jahe',
-                    'Coklat Panas',
-                    'Bajigur',
-                    'Bandrek',
-                    'Wedang Uwuh',
-                    'Cendol Dawet',
-                    'Boba Milk Tea',
-                    'Kopi Susu Gula Aren',
-                    'Mojito Lemon',
-                    'Yakult Green Tea'
-                ]
-            ]
+                    ['name' => 'Bakpao Coklat', 'category' => $kategoriMakanan],
+                    ['name' => 'Bakpao Ayam', 'category' => $kategoriMakanan],
+                    ['name' => 'Susu Kedelai', 'category' => $kategoriMinuman],
+                    ['name' => 'Teh Hangat', 'category' => $kategoriMinuman],
+                ],
+            ],
+            [
+                'name' => 'Bakso Petra',
+                'gedung' => 'Gedung Q',
+                'menus' => [
+                    ['name' => 'Bakso Petra Spesial', 'category' => $kategoriMakanan],
+                    ['name' => 'Bakso Biasa Petra', 'category' => $kategoriMakanan],
+                    ['name' => 'Es Campur', 'category' => $kategoriMinuman],
+                    ['name' => 'Teh Tawar', 'category' => $kategoriMinuman],
+                ],
+            ],
+            [
+                'name' => 'Ndokee Express',
+                'gedung' => 'Gedung Q',
+                'menus' => [
+                    ['name' => 'Mie Goreng Ndokee', 'category' => $kategoriMakanan],
+                    ['name' => 'Mie Kuah Pedas', 'category' => $kategoriMakanan],
+                    ['name' => 'Thai Tea', 'category' => $kategoriMinuman],
+                    ['name' => 'Kopi Susu', 'category' => $kategoriMinuman],
+                ],
+            ],
+            [
+                'name' => 'Depot Mapan',
+                'gedung' => 'Gedung W',
+                'menus' => [
+                    ['name' => 'Nasi Campur Komplit', 'category' => $kategoriMakanan],
+                    ['name' => 'Nasi Ayam Kremes', 'category' => $kategoriMakanan],
+                    ['name' => 'Es Degan', 'category' => $kategoriMinuman],
+                    ['name' => 'Teh Botol', 'category' => $kategoriMinuman],
+                ],
+            ],
+            [
+                'name' => 'Tong Tji',
+                'gedung' => 'Gedung W',
+                'menus' => [
+                    ['name' => 'Teh Hijau Original', 'category' => $kategoriMinuman],
+                    ['name' => 'Teh Tarik', 'category' => $kategoriMinuman],
+                    ['name' => 'Teh Leci', 'category' => $kategoriMinuman],
+                    ['name' => 'Pisang Goreng', 'category' => $kategoriMakanan],
+                ],
+            ],
+            [
+                'name' => 'Pangsit Mie Bu Kusni',
+                'gedung' => 'Gedung T',
+                'menus' => [
+                    ['name' => 'Pangsit Mie Komplit', 'category' => $kategoriMakanan],
+                    ['name' => 'Mie Ayam Ceker', 'category' => $kategoriMakanan],
+                    ['name' => 'Cincau Susu', 'category' => $kategoriMinuman],
+                    ['name' => 'Lemon Tea', 'category' => $kategoriMinuman],
+                ],
+            ],
+            [
+                'name' => 'Mie Pinangsia Aboen',
+                'gedung' => 'Gedung T',
+                'menus' => [
+                    ['name' => 'Mie Pinangsia Spesial', 'category' => $kategoriMakanan],
+                    ['name' => 'Bakso Ikan Pinangsia', 'category' => $kategoriMakanan],
+                    ['name' => 'Susu Jahe', 'category' => $kategoriMinuman],
+                    ['name' => 'Air Mineral', 'category' => $kategoriMinuman],
+                ],
+            ],
         ];
 
-        // Buat kategori terlebih dahulu agar tidak duplikat
-        $categoryMap = [];
-        foreach ($categories as $category) {
-            $createdCategory = Category::create([
-                'category_name' => $category['name']
-            ]);
-            $categoryMap[$category['name']] = [
-                'model' => $createdCategory,
-                'menus' => $category['menus']
-            ];
-        }
-
-        // Buat tenant + user + assign semua menu
-        foreach ($tenants as $key => $tenantName) {
+        // Proses buat tenant, user, menu
+        foreach ($tenantData as $index => $tenantInfo) {
             $user = User::create([
-                'name' => 'Tenant ' . $tenantName,
-                'email' => 'tenant' . $key . '@gmail.com',
+                'name' => 'Tenant ' . $tenantInfo['name'],
+                'email' => 'tenant' . $index . '@gmail.com',
                 'password' => Hash::make('tenant123'),
             ]);
 
             $user->assignRole('tenant');
 
             $tenant = Tenant::create([
-                'name' => $tenantName,
-                'tenant_location_id' => TenantLocation::inRandomOrder()->first()->id,
+                'name' => $tenantInfo['name'],
+                'tenant_location_id' => $lokasiGedung[$tenantInfo['gedung']]->id,
                 'user_id' => $user->id,
-                'isOpen' => true
+                'isOpen' => true,
             ]);
 
-            // Tambahkan semua menu untuk tenant ini
-            foreach ($categoryMap as $categoryData) {
-                $category = $categoryData['model'];
-                foreach ($categoryData['menus'] as $menuName) {
-                    Product::create([
-                        'name' => $menuName,
-                        'price' => rand(5000, 50000),
-                        'tenant_id' => $tenant->id,
-                        'category_id' => $category->id
-                    ]);
-                }
+            foreach ($tenantInfo['menus'] as $menu) {
+                Product::create([
+                    'name' => $menu['name'],
+                    'price' => rand(8000, 30000),
+                    'tenant_id' => $tenant->id,
+                    'category_id' => $menu['category']->id,
+                ]);
             }
         }
-
 
         // Seed Departments
         $departments = [

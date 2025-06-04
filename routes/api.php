@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\CustomerController as ApiCustomerController;
 use App\Http\Controllers\Api\OrderItemController as ApiOrderItemController;
 use App\Http\Controllers\Api\DeliveryPointController as ApiDeliveryPointController;
 use App\Http\Controllers\Api\TenantLocationController as ApiTenantLocationController;
+use App\Http\Controllers\Api\PorterController as ApiPorterController;
+
 
 // login
 Route::post('/login', [AuthController::class, 'login']);
@@ -83,6 +85,14 @@ Route::middleware('auth:sanctum')->group(function () {
     //Tenant Location
     Route::get('/tenant-locations', [ApiTenantLocationController::class, 'index']);
 });
+
+Route::get('/porters/{porterId}/orderList', [ApiPorterController::class, 'orderList']);
+Route::post('/porters/{orderId}/accept', [ApiPorterController::class, 'acceptOrder']);
+Route::post('/porters/{orderId}/reject', [ApiPorterController::class, 'rejectOrder']);
+Route::get('/porters/{porterId}/accepted-orders', [ApiPorterController::class, 'viewAcceptedOrders']);
+Route::put('/porters/{orderId}/deliver', [ApiPorterController::class, 'deliverOrder']);
+
+
 
 
 
