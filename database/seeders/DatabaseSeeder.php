@@ -305,12 +305,10 @@ class DatabaseSeeder extends Seeder
 
         $statuses = [
             'received',
-            'processing',
-            'picked_up',
-            'delivered',
+            'on-delivery',
             'finished',
             'canceled',
-            'waiting'
+            'waiting',
         ];
 
         foreach ($statuses as $status) {

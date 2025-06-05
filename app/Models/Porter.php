@@ -33,4 +33,9 @@ class Porter extends Model
     {
         return $this->belongsTo(OrderHistory::class);
     }
+
+    public function ratings()
+    {
+        return $this->hasMany(PorterRating::class);
+    }
 }

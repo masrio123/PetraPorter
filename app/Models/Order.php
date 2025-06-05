@@ -57,4 +57,9 @@ class Order extends Model
     {
         return $this->belongsTo(Tenant::class);
     }
+
+    public function porter()
+    {
+        return $this->belongsTo(Porter::class);
+    }
 }

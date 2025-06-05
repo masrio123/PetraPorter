@@ -150,7 +150,7 @@ class CartController extends Controller
                     'cart_id' => $cart->id,
                     'customer_id' => $cart->customer_id,
                     'tenant_location_id' => $cart->tenant_location_id,
-                    'order_status_id' => 1, // pending
+                    'order_status_id' => 5, // pending
                     'total_price' => $totalPrice,
                     'shipping_cost' => $shippingCost,
                     'grand_total' => $grandTotal,

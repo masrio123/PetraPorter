@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Porter;
 use App\Models\BankUser;
 use App\Models\Department;
+use App\Models\OrderHistory;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -82,8 +83,8 @@ class PorterController extends Controller
             ], 404);
         }
 
-        // Pastikan order masih status waiting (id 7)
-        if ($order->order_status_id != 7) {
+        // Pastikan order masih status waiting (id 5)
+        if ($order->order_status_id != 5) {
             return response()->json([
                 'success' => false,
                 'message' => 'Order tidak dalam status menunggu penerimaan.',
@@ -133,12 +134,12 @@ class PorterController extends Controller
         // Response
         return response()->json([
             'success' => true,
-            'message' => 'Order berhasil diterima.',
+            'message' => 'Order berhasil diterima dan diproses tenant',
             'data' => [
                 'order_id' => $order->id,
                 'customer_name' => optional($order->customer)->customer_name,
                 'department' => optional($order->customer->department)->department_name ?? '-',
-                'tenant_name' => optional($order->tenant)->name,
+                'tenant_name' => optional(optional($order->product)->tenant)->name ?? 'Unknown Tenant',
                 'total_price' => $order->total_price,
                 'status' => $order->order_status_id,
                 'created_at' => $order->created_at->toDateTimeString(),
@@ -159,7 +160,7 @@ class PorterController extends Controller
             ], 404);
         }
 
-        if ($order->order_status_id != 7) {
+        if ($order->order_status_id != 5) {
             return response()->json([
                 'success' => false,
                 'message' => 'Order tidak dalam status menunggu penerimaan.',
@@ -182,25 +183,20 @@ class PorterController extends Controller
             ], 404);
         }
 
-        // Cek apakah sedang timeout
-        if ($porter->timeout_until && now()->lt($porter->timeout_until)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Porter sedang dalam masa timeout hingga ' . $porter->timeout_until->format('Y-m-d H:i:s'),
-            ], 403);
-        }
+        // Tambah jumlah penolakan
+        $porter->rejected_count = ($porter->rejected_count ?? 0) + 1;
 
-        // Hitung jumlah penolakan
-        $porter->rejected_count = $porter->rejected_count + 1;
-
-        if ($porter->rejection_count >= 4) {
-            $porter->timeout_until = now()->addDays(2); // Timeout 2 hari
+        if ($porter->rejected_count >= 4) {
+            // Timeout 2 hari
+            $porter->timeout_until = now()->addDays(2);
             $porter->rejected_count = 0; // reset
             $porter->isWorking = false;
             $porter->porter_isOnline = false;
             $porter->save();
 
-            $order->order_status_id = 6; // Ditolak
+            // Set order ke status waiting lagi
+            $order->order_status_id = 7;
+            $order->porter_id = null; // kosongkan porter
             $order->save();
 
             return response()->json([
@@ -208,16 +204,21 @@ class PorterController extends Controller
                 'message' => 'Order ditolak. Anda telah menolak 4 kali, dan sekarang dalam masa timeout 2 hari.',
                 'data' => [
                     'timeout_until' => $porter->timeout_until->format('Y-m-d H:i:s'),
+                    'order_id' => $order->id,
+                    'order_status' => 'waiting',
                 ],
             ]);
         } else {
+            // Porter masih boleh menolak
             $kesempatanTersisa = 4 - $porter->rejected_count;
 
             $porter->isWorking = false;
             $porter->porter_isOnline = true;
             $porter->save();
 
-            $order->order_status_id = 6;
+            // Reset order agar bisa dicari porter lain
+            $order->order_status_id = 7;
+            $order->porter_id = null;
             $order->save();
 
             return response()->json([
@@ -226,13 +227,13 @@ class PorterController extends Controller
                 'peringatan' => "Anda masih memiliki $kesempatanTersisa kesempatan sebelum terkena timeout 2 hari.",
                 'data' => [
                     'order_id' => $order->id,
-                    'status' => $order->order_status_id,
+                    'order_status' => 'waiting',
                     'updated_at' => $order->updated_at->toDateTimeString(),
+                    'kesempatan_tersisa' => $kesempatanTersisa,
                 ]
             ]);
         }
     }
-
 
     public function viewAcceptedOrders($porterId)
     {
@@ -244,7 +245,7 @@ class PorterController extends Controller
             'items.tenant',
         ])
             ->where('porter_id', $porterId)
-            ->where('order_status_id', 1) // status: accepted
+            ->where('order_status_id', '!=', 3) // status: received
             ->latest()
             ->get();
 
@@ -294,7 +295,7 @@ class PorterController extends Controller
 
     public function deliverOrder($orderId)
     {
-        $order = Order::find($orderId);
+        $order = Order::with('items')->find($orderId);
 
         if (!$order) {
             return response()->json([
@@ -303,7 +304,15 @@ class PorterController extends Controller
             ], 404);
         }
 
-        // Pastikan order dalam status "sedang dikerjakan" (received)
+        // Cek jika sudah finished
+        if ($order->order_status_id == 3) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order ini telah diantar sebelumnya.',
+            ], 400);
+        }
+
+        // Pastikan order memang sedang dikerjakan
         if ($order->order_status_id != 1) {
             return response()->json([
                 'success' => false,
@@ -311,11 +320,11 @@ class PorterController extends Controller
             ], 400);
         }
 
-        // Ubah status order ke "delivered" (misalnya ID 2)
-        $order->order_status_id = 4;
+        // Ubah status order jadi delivered
+        $order->order_status_id = 2;
         $order->save();
 
-        // Update porter jadi tidak sedang kerja dan bisa online lagi
+        // Update status porter
         $porter = Porter::find($order->porter_id);
         if ($porter) {
             $porter->isWorking = false;
@@ -325,10 +334,81 @@ class PorterController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Order berhasil ditandai sebagai terkirim.',
+            'message' => 'Order dlm status diantar.',
             'data' => [
                 'order_id' => $order->id,
                 'new_status' => $order->order_status_id,
+            ],
+        ]);
+    }
+
+    public function finishOrder($orderId)
+    {
+        $order = Order::find($orderId);
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order tidak ditemukan.',
+            ], 404);
+        }
+
+        // Pastikan status saat ini adalah delivered (4)
+        if ($order->order_status_id != 2) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order belum diantar, tidak bisa diselesaikan.',
+            ], 400);
+        }
+
+        // Cek jika sudah selesai sebelumnya
+        if ($order->order_status_id == 3) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order ini sudah ditandai sebagai selesai.',
+            ], 400);
+        }
+
+        // Ubah status menjadi finished
+        $order->order_status_id = 3;
+        $order->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order selesai.',
+            'data' => [
+                'order_id' => $order->id,
+                'new_status' => $order->order_status_id,
+            ],
+        ]);
+    }
+
+    public function workSummary($porterId)
+    {
+        // Ambil semua order yang sudah selesai oleh porter ini
+        $orders = OrderHistory::where('porter_id', $porterId)->get();
+
+        if ($orders->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Porter belum memiliki riwayat pekerjaan.',
+                'data' => [
+                    'total_earnings' => 0,
+                    'total_orders_handled' => 0,
+                ],
+            ]);
+        }
+
+        // Hitung total pendapatan dari shipping_cost dan total order yang ditangani
+        $totalEarnings = $orders->sum('shipping_cost');
+        $totalOrders = $orders->count();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Data pekerjaan porter ID: $porterId",
+            'data' => [
+                'total_earnings' => $totalEarnings,
+                'total_orders_handled' => $totalOrders,
             ],
         ]);
     }

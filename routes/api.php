@@ -80,6 +80,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/cancel/{id}', [ApiOrderItemController::class, 'cancelOrder']);
         Route::get('/canceled', [ApiOrderItemController::class, 'showCanceledOrders']);
         Route::get('/history/{customerId}', [ApiOrderHistoryController::class, 'getHistoryByCustId']);
+        Route::post('/rate-porter/{orderId}', [ApiOrderItemController::class, 'ratePorter']);
+
     });
 
     //Tenant Location
@@ -91,6 +93,9 @@ Route::post('/porters/{orderId}/accept', [ApiPorterController::class, 'acceptOrd
 Route::post('/porters/{orderId}/reject', [ApiPorterController::class, 'rejectOrder']);
 Route::get('/porters/{porterId}/accepted-orders', [ApiPorterController::class, 'viewAcceptedOrders']);
 Route::put('/porters/{orderId}/deliver', [ApiPorterController::class, 'deliverOrder']);
+Route::post('/porters/{orderId}/finish', [ApiPorterController::class, 'finishOrder']);
+Route::get('/porters/{porterId}/history', [ApiOrderHistoryController::class, 'getHistoryByPorterId']);
+Route::get('/porters/{porterId}/workSummary', [ApiPorterController::class, 'workSummary']);
 
 
 
