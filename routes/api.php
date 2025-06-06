@@ -59,6 +59,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/tenants/{id}', [ApiTenantController::class, 'destroy']);
     Route::patch('/tenants/{id}/toggle-is-open', [ApiTenantController::class, 'toggleIsOpen']);
     Route::get('/location/{id}/tenants', [ApiTenantController::class, 'fetchTenantsByLocation']);
+    Route::get('/tenants/{tenantId}/order-notifications', [ApiOrderItemController::class, 'getTenantOrderNotifications']);
+
 
 
     //Customer
