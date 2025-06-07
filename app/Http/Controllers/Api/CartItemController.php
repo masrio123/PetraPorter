@@ -28,7 +28,7 @@ class CartItemController extends Controller
             // Cek apakah tenant berada di gedung yang sama
             if ($tenant->tenant_location_id !== $cart->tenant_location_id) {
                 $allowedTenants = Tenant::where('tenant_location_id', $cart->tenant_location_id)
-                    ->select('id', 'tenant_name')
+                    ->select('id', 'name')
                     ->get();
 
                 return response()->json([

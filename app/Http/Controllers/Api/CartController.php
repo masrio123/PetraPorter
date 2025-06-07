@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 
 class CartController extends Controller
-{
+{   
     public function createCart(Request $request)
     {
         try {
@@ -118,66 +118,66 @@ class CartController extends Controller
         }
     }
 
-    public function checkoutCart($id)
-    {
-        try {
-            $cart = Cart::with(['items.product', 'tenantLocation'])->findOrFail($id);
+        public function checkoutCart($id)
+        {
+            try {
+                $cart = Cart::with(['items.product', 'tenantLocation'])->findOrFail($id);
 
-            if ($cart->items->isEmpty()) {
-                return response()->json(['message' => 'Cart is empty, cannot checkout.'], 400);
-            }
-
-            $totalPrice = $cart->items->sum(fn($item) => $item->quantity * $item->product->price);
-            $totalQuantity = $cart->items->sum('quantity');
-
-            $shippingCost = match (true) {
-                $totalQuantity <= 2 => 2000,
-                $totalQuantity <= 4 => 5000,
-                $totalQuantity <= 10 => 10000,
-                default => 10000 + (ceil($totalQuantity - 10) * 10000),
-            };
-
-            $grandTotal = $totalPrice + $shippingCost;
-
-            $porter = Porter::with('department', 'bankUser')->inRandomOrder()->first();
-
-            if (!$porter) {
-                return response()->json(['message' => 'No porter available.'], 500);
-            }
-
-            DB::transaction(function () use ($cart, $totalPrice, $shippingCost, $grandTotal) {
-                $order = Order::create([
-                    'cart_id' => $cart->id,
-                    'customer_id' => $cart->customer_id,
-                    'tenant_location_id' => $cart->tenant_location_id,
-                    'order_status_id' => 5, // pending
-                    'total_price' => $totalPrice,
-                    'shipping_cost' => $shippingCost,
-                    'grand_total' => $grandTotal,
-                ]);
-
-                foreach ($cart->items as $item) {
-                    OrderItem::create([
-                        'order_id' => $order->id,
-                        'product_id' => $item->product_id,
-                        'tenant_id' => $item->tenant_id,
-                        'quantity' => $item->quantity,
-                        'price' => $item->product->price,
-                        'subtotal' => $item->quantity * $item->product->price,
-                    ]);
+                if ($cart->items->isEmpty()) {
+                    return response()->json(['message' => 'Cart is empty, cannot checkout.'], 400);
                 }
 
-                $cart->update(['order_status_id' => 1]); // Set status juga di cart
-                $cart->items()->delete(); // Kosongkan cart
-            });
+                $totalPrice = $cart->items->sum(fn($item) => $item->quantity * $item->product->price);
+                $totalQuantity = $cart->items->sum('quantity');
 
-            return response()->json(['message' => 'Checkout berhasil, order telah dibuat.']);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['message' => 'Cart tidak ditemukan.'], 404);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Checkout gagal.', 'error' => $e->getMessage()], 500);
+                $shippingCost = match (true) {
+                    $totalQuantity <= 2 => 2000,
+                    $totalQuantity <= 4 => 5000,
+                    $totalQuantity <= 10 => 10000,
+                    default => 10000 + (ceil($totalQuantity - 10) * 10000),
+                };
+
+                $grandTotal = $totalPrice + $shippingCost;
+
+                $porter = Porter::with('department', 'bankUser')->inRandomOrder()->first();
+
+                if (!$porter) {
+                    return response()->json(['message' => 'No porter available.'], 500);
+                }
+
+                DB::transaction(function () use ($cart, $totalPrice, $shippingCost, $grandTotal) {
+                    $order = Order::create([
+                        'cart_id' => $cart->id,
+                        'customer_id' => $cart->customer_id,
+                        'tenant_location_id' => $cart->tenant_location_id,
+                        'order_status_id' => 5, // pending
+                        'total_price' => $totalPrice,
+                        'shipping_cost' => $shippingCost,
+                        'grand_total' => $grandTotal,
+                    ]);
+
+                    foreach ($cart->items as $item) {
+                        OrderItem::create([
+                            'order_id' => $order->id,
+                            'product_id' => $item->product_id,
+                            'tenant_id' => $item->tenant_id,
+                            'quantity' => $item->quantity,
+                            'price' => $item->product->price,
+                            'subtotal' => $item->quantity * $item->product->price,
+                        ]);
+                    }
+
+                    $cart->update(['order_status_id' => 1]); // Set status juga di cart
+                    $cart->items()->delete(); // Kosongkan cart
+                });
+
+                return response()->json(['message' => 'Checkout berhasil, order telah dibuat.']);
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                return response()->json(['message' => 'Cart tidak ditemukan.'], 404);
+            } catch (\Exception $e) {
+                return response()->json(['message' => 'Checkout gagal.', 'error' => $e->getMessage()], 500);
+            }
         }
-    }
 
     public function getAllCarts()
     {
