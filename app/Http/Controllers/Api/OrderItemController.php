@@ -22,7 +22,8 @@ class OrderItemController extends Controller
         $order = Order::with([
             'customer.department',
             'status',
-            'porter',
+            'porter.department',
+            'porter.bankUser',
             'tenantLocation',
             'items.product.tenant'
         ])->find($orderId);
@@ -30,11 +31,40 @@ class OrderItemController extends Controller
         if (!$order) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found.',
+                'message' => 'Order tidak ditemukan.',
             ], 404);
         }
 
-        // Jika sudah ada porter yang ditugaskan
+        // Tangani berdasarkan status
+        switch ($order->order_status_id) {
+            case 1:
+            case 2:
+                break; // lanjut tampilkan detail kalau status 1/2 dan porter sudah ada
+
+            case 3:
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order ini sudah selesai.',
+                ], 400);
+
+            case 4:
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order ini sudah dibatalkan.',
+                ], 400);
+
+            case 5:
+                // lanjut ke proses cari porter jika belum ada
+                break;
+
+            default:
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Status order tidak dikenali.',
+                ], 400);
+        }
+
+        // Kalau sudah ada porter, tampilkan detail
         if ($order->porter_id) {
             $groupedItems = [];
 
@@ -52,7 +82,7 @@ class OrderItemController extends Controller
                     'product_name' => $item->product->name,
                     'quantity' => $item->quantity,
                     'price' => number_format($item->price, 2, '.', ''),
-                    'total_price' => number_format($order->total_price, 2, '.', '')
+                    'subtotal' => number_format($item->price * $item->quantity, 2, '.', '')
                 ];
             }
 
@@ -63,18 +93,24 @@ class OrderItemController extends Controller
                     'order_id' => $order->id,
                     'order_status' => $order->status->order_status,
                     'tenant_location_name' => $order->tenantLocation->location_name ?? '-',
-                    'porter_id' => $order->porter_id,
                     'total_price' => number_format($order->total_price, 2, '.', ''),
                     'shipping_cost' => number_format($order->shipping_cost, 2, '.', ''),
                     'grand_total' => number_format($order->grand_total, 2, '.', ''),
                     'created_at' => $order->created_at->format('Y-m-d H:i:s'),
+                    'porter' => [
+                        'porter_id' => $order->porter->id,
+                        'name' => $order->porter->porter_name,
+                        'nrp' => $order->porter->porter_nrp,
+                        'department' => $order->porter->department->department_name ?? '-',
+                        'account_number' => $order->porter->bankUser->account_number ?? '-',
+                    ],
                     'items' => array_values($groupedItems)
                 ]
             ]);
         }
 
-        // Jika belum ada porter, cari secara acak
-        $porter = Porter::with('department')
+        // Kalau belum ada porter, cari porter online
+        $porter = Porter::with(['department', 'bankUser'])
             ->where('porter_isOnline', true)
             ->inRandomOrder()
             ->first();
@@ -86,9 +122,8 @@ class OrderItemController extends Controller
             ], 404);
         }
 
-        // Tetapkan porter & ubah status order
+        // Tetapkan porter dan update order
         $order->porter_id = $porter->id;
-        $order->order_status_id = 5; // waiting_for_acceptance
         $order->save();
 
         $systemMessage = "Sistem menunjuk porter bernama {$porter->porter_name}, {$porter->porter_nrp} dari jurusan {$porter->department->department_name}";
@@ -110,14 +145,15 @@ class OrderItemController extends Controller
             ], 404);
         }
 
-        // Cegah cancel jika order sudah diterima porter (status ID 1)
-        if ($order->order_status_id == 1) {
+        // Hanya izinkan cancel jika status "waiting" (id = 5)
+        if ($order->order_status_id != 5) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order sudah diterima porter dan tidak bisa dibatalkan.'
+                'message' => 'Order hanya bisa dibatalkan jika status masih waiting.'
             ], 400);
         }
 
+        // Ambil status canceled
         $canceledStatus = OrderStatus::where('order_status', 'canceled')->first();
         if (!$canceledStatus) {
             return response()->json([
@@ -126,39 +162,18 @@ class OrderItemController extends Controller
             ], 500);
         }
 
-        // Simpan ke order_histories
-        $history = OrderHistory::create([
-            'customer_id' => $order->customer_id,
-            'customer_name' => optional($order->customer)->customer_name ?? 'Unknown Customer',
-            'tenant_location_name' => optional($order->tenantLocation)->location_name ?? 'Unknown Location',
-            'order_status_id' => $canceledStatus->id,
-            'porter_id' => $order->porter_id ?? null,
-            'total_price' => $order->total_price,
-            'shipping_cost' => $order->shipping_cost,
-            'grand_total' => $order->grand_total,
-        ]);
-
-        // Simpan item-item
-        foreach ($order->items as $item) {
-            $history->items()->create([
-                'product_id' => $item->product_id,
-                'product_name' => optional($item->product)->name ?? 'Unknown Product',
-                'tenant_name' => optional(optional($item->product)->tenant)->name ?? 'Unknown Tenant',
-                'quantity' => $item->quantity,
-                'price' => $item->price,
-                'total_price' => $item->price * $item->quantity,
-            ]);
-        }
-
-        // Hapus order asli
-        $order->items()->delete();
-        $order->delete();
+        // Update status ke canceled
+        $order->order_status_id = $canceledStatus->id;
+        $order->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Order canceled and moved to history'
+            'message' => 'Order berhasil dibatalkan.',
+            'order_id' => $order->id,
+            'new_status' => $canceledStatus->order_status
         ]);
     }
+
 
     public function ratePorter($orderId, Request $request)
     {
@@ -210,40 +225,11 @@ class OrderItemController extends Controller
         $porter->porter_rating = round($avgRating, 2);
         $porter->save();
 
-        // Masukkan ke order_histories
-        $orderHistory = new OrderHistory();
-        $orderHistory->order_status_id = 3; // finished
-        $orderHistory->customer_id = $order->customer_id;
-        $orderHistory->customer_name = optional($order->customer)->customer_name ?? 'Unknown Customer';
-        $orderHistory->porter_id = $order->porter_id;
-        $orderHistory->tenant_location_name = optional($order->tenantLocation)->location_name ?? 'Unknown Location';
-        $orderHistory->shipping_cost = $order->shipping_cost;
-        $orderHistory->total_price = $order->total_price;
-        $orderHistory->grand_total = $order->grand_total;
-        $orderHistory->save();
-
-        // Salin item ke order_history_items
-        foreach ($order->items as $item) {
-            $orderHistory->items()->create([
-                'product_id' => $item->product_id,
-                'product_name' => optional($item->product)->name ?? 'Unknown Product',
-                'tenant_name' => optional(optional($item->product)->tenant)->name ?? 'Unknown Tenant',
-                'quantity' => $item->quantity,
-                'price' => $item->price,
-                'total_price' => $item->price * $item->quantity,
-            ]);
-        }
-
-        // Hapus order & items
-        $order->items()->delete(); // jika tidak cascade
-        $order->delete();
-
         return response()->json([
             'success' => true,
-            'message' => 'Rating berhasil diberikan. Order sudah dipindahkan ke riwayat.',
+            'message' => 'Rating berhasil diberikan',
             'porter_id' => $porter->id,
             'new_average_rating' => $porter->porter_rating,
-            'history_id' => $orderHistory->id,
         ]);
     }
 
