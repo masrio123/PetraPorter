@@ -8,10 +8,11 @@ use App\Http\Controllers\Controller;
 
 class DeliveryPointController extends Controller
 {
-    // Ambil semua delivery point
+    // Ambil semua delivery point yang AKTIF
     public function fetchDeliveryPoint()
     {
-        $delivery_points = DeliveryPoint::all();
+        $delivery_points = DeliveryPoint::where('isActive', true)->get();
+
         return response()->json([
             'status' => 'success',
             'data' => $delivery_points
@@ -19,25 +20,23 @@ class DeliveryPointController extends Controller
     }
 
     // Tambah delivery point
-    // Tambah Delivery Point
     public function store(Request $request)
     {
-        // Validasi input
         $validated = $request->validate([
             'delivery_point_name' => 'required|string|max:255',
         ]);
 
-        // Simpan data ke database
-        $deliveryPoint = DeliveryPoint::create($validated);
+        $deliveryPoint = DeliveryPoint::create([
+            'delivery_point_name' => $validated['delivery_point_name'],
+            'isActive' => true, // default aktif saat dibuat
+        ]);
 
-        // Kembalikan response sukses
         return response()->json([
             'status' => 'success',
             'message' => 'Delivery point created successfully',
             'data' => $deliveryPoint,
         ], 201);
     }
-
 
     // Edit/update delivery point
     public function edit(Request $request, $id)

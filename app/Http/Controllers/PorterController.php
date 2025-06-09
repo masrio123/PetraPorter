@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\Porter;
-use App\Models\Department;
 use App\Models\BankUser;
+use App\Models\Department;
 use Illuminate\Http\Request;
 
 class PorterController extends Controller
@@ -75,14 +76,14 @@ class PorterController extends Controller
 
         if ($request->has('action')) {
             // Handle aksi timeout/cancel_timeout
-                if ($request->action === 'timeout') {
-                    $porter->timeout_until = now()->addDays(2);
-                } elseif ($request->action === 'cancel_timeout') {
-                    $porter->timeout_until = null;
-                }
-                $porter->save();
+            if ($request->action === 'timeout') {
+                $porter->timeout_until = now()->addDays(2);
+            } elseif ($request->action === 'cancel_timeout') {
+                $porter->timeout_until = null;
+            }
+            $porter->save();
 
-                return redirect()->route('dashboard.porters.index')->with('success', 'Status timeout berhasil diperbarui.');
+            return redirect()->route('dashboard.porters.index')->with('success', 'Status timeout berhasil diperbarui.');
         } else {
             // Validasi dasar
             $request->validate([
@@ -130,7 +131,6 @@ class PorterController extends Controller
             return redirect()->route('dashboard.porters.index')->with('success', 'Porter berhasil diperbarui.');
         }
     }
-
 
     public function destroy(Porter $porter)
     {

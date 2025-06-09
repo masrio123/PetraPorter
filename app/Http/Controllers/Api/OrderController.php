@@ -140,7 +140,8 @@ class OrderController extends Controller
                 'status',
                 'customer',
                 'tenantLocation',
-                'porter' 
+                'porter.department',
+                'porter.bankUser'
             ])->where('customer_id', $customerId)->get();
 
             if ($orders->isEmpty()) {
@@ -174,9 +175,15 @@ class OrderController extends Controller
                     'customer_name' => $order->customer->customer_name,
                     'tenant_location_id' => $order->tenantLocation->id,
                     'tenant_location_name' => $order->tenantLocation->location_name,
-                    'porter_id' => optional($order->porter)->id,
-                    'porter_name' => optional($order->porter)->porter_name,
+                    'porter' => $order->porter ? [
+                        'porter_id' => $order->porter->id,
+                        'name' => $order->porter->porter_name,
+                        'nrp' => $order->porter->porter_nrp,
+                        'department' => optional($order->porter->department)->department_name ?? '-',
+                        'account_number' => optional($order->porter->bankUser)->account_number ?? '-',
+                    ] : null,
                     'order_status' => optional($order->status)->order_status,
+                    'order_date' => $order->created_at->format('Y-m-d H:i:s'),
                     'items' => $groupedItems,
                     'total_price' => $order->total_price,
                     'shipping_cost' => $order->shipping_cost,

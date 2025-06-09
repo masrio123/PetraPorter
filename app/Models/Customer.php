@@ -28,9 +28,4 @@ class Customer extends Model
     {
         return $this->hasMany(Order::class);
     }
-
-    public function orderHistory()
-    {
-        return $this->hasMany(OrderHistory::class);
-    }
 }

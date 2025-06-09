@@ -32,7 +32,7 @@ class DeliveryPointController extends Controller
         ]);
 
         return redirect()->route('dashboard.delivery-points.index')
-                         ->with('success', 'Delivery point berhasil ditambahkan.');
+            ->with('success', 'Delivery point berhasil ditambahkan.');
     }
 
     // Tampilkan form edit delivery point
@@ -55,7 +55,7 @@ class DeliveryPointController extends Controller
         ]);
 
         return redirect()->route('dashboard.delivery-points.index')
-                         ->with('success', 'Delivery point berhasil diperbarui.');
+            ->with('success', 'Delivery point berhasil diperbarui.');
     }
 
     // Hapus delivery point
@@ -65,6 +65,18 @@ class DeliveryPointController extends Controller
         $delivery_point->delete();
 
         return redirect()->route('dashboard.delivery-points.index')
-                         ->with('success', 'Delivery point berhasil dihapus.');
+            ->with('success', 'Delivery point berhasil dihapus.');
+    }
+
+    public function toggleStatus($id)
+    {
+        $delivery_point = DeliveryPoint::findOrFail($id);
+
+        // Toggle nilai is_active (true -> false, false -> true)
+        $delivery_point->isActive = !$delivery_point->isActive;
+        $delivery_point->save();
+
+        return redirect()->route('dashboard.delivery-points.index')
+            ->with('success', 'Status delivery point berhasil diperbarui.');
     }
 }

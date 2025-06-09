@@ -35,36 +35,69 @@ class OrderItemController extends Controller
             ], 404);
         }
 
-        // Tangani berdasarkan status
-        switch ($order->order_status_id) {
-            case 1:
-            case 2:
-                break; // lanjut tampilkan detail kalau status 1/2 dan porter sudah ada
+        $orderStatusId = $order->order_status_id;
 
-            case 3:
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Order ini sudah selesai.',
-                ], 400);
-
-            case 4:
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Order ini sudah dibatalkan.',
-                ], 400);
-
-            case 5:
-                // lanjut ke proses cari porter jika belum ada
-                break;
-
-            default:
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Status order tidak dikenali.',
-                ], 400);
+        // KASUS STATUS KHUSUS: 4 dan 5 → Langsung return string
+        if ($orderStatusId == 4) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order ini sudah dibatalkan.',
+                'status' => 'Order dibatalkan'
+            ], 400);
         }
 
-        // Kalau sudah ada porter, tampilkan detail
+        if ($orderStatusId == 5) {
+            // Tetap cari porter jika belum ada
+            if (!$order->porter_id) {
+                $porter = Porter::with(['department', 'bankUser'])
+                    ->where('porter_isOnline', true)
+                    ->inRandomOrder()
+                    ->first();
+
+                if (!$porter) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tidak ada porter online saat ini.',
+                        'status' => 'Sedang menunggu porter'
+                    ], 404);
+                }
+
+                $order->porter_id = $porter->id;
+                $order->save();
+
+                $systemMessage = "Sistem menunjuk porter bernama {$porter->porter_name}, {$porter->porter_nrp} dari jurusan {$porter->department->department_name}";
+
+                return response()->json([
+                    'success' => true,
+                    'message' => $systemMessage,
+                    'status' => 'Sedang menunggu porter'
+                ]);
+            }
+
+            // Jika porter sudah ditetapkan tapi status masih 5
+            return response()->json([
+                'success' => true,
+                'message' => 'Order ini sudah memiliki porter.',
+                'status' => 'Sedang menunggu porter'
+            ]);
+        }
+
+        // KASUS STATUS LABEL: 1, 2, 3
+        $statusLabelMap = [
+            1 => 'Pesanan diterima',
+            2 => 'Sedang dalam perjalanan',
+            3 => 'Telah sampai ke customer',
+        ];
+
+        $statusArray = [];
+        foreach ($statusLabelMap as $id => $label) {
+            $statusArray[] = [
+                'label' => $label,
+                'key' => $orderStatusId === $id,
+            ];
+        }
+
+        // Jika sudah ada porter
         if ($order->porter_id) {
             $groupedItems = [];
 
@@ -87,8 +120,9 @@ class OrderItemController extends Controller
             }
 
             return response()->json([
-                'success' => false,
+                'success' => true,
                 'message' => 'Order ini sudah memiliki porter yang menangani.',
+                'status' => $statusArray,
                 'data' => [
                     'order_id' => $order->id,
                     'order_status' => $order->status->order_status,
@@ -109,30 +143,15 @@ class OrderItemController extends Controller
             ]);
         }
 
-        // Kalau belum ada porter, cari porter online
-        $porter = Porter::with(['department', 'bankUser'])
-            ->where('porter_isOnline', true)
-            ->inRandomOrder()
-            ->first();
-
-        if (!$porter) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tidak ada porter online saat ini.',
-            ], 404);
-        }
-
-        // Tetapkan porter dan update order
-        $order->porter_id = $porter->id;
-        $order->save();
-
-        $systemMessage = "Sistem menunjuk porter bernama {$porter->porter_name}, {$porter->porter_nrp} dari jurusan {$porter->department->department_name}";
-
+        // Harusnya ini ga kena lagi karena 5 udah ditangani di atas
         return response()->json([
-            'success' => true,
-            'message' => $systemMessage,
-        ]);
+            'success' => false,
+            'message' => 'Porter belum ditetapkan dan status order bukan status pencarian porter.',
+            'status' => $statusArray
+        ], 400);
     }
+
+
 
     public function cancelOrder($orderId)
     {

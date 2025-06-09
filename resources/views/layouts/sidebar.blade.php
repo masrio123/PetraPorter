@@ -5,6 +5,7 @@
         ['label' => 'Porter Management', 'icons' => 'bx bx-user', 'route' => 'dashboard.porters.index'],
         ['label' => 'Delivery Point', 'icons' => 'bx bx-map', 'route' => 'dashboard.delivery-points.index'],
         ['label' => 'Bank User', 'icons' => 'bx bx-money', 'route' => 'dashboard.bank-users.index'],
+        ['label' => 'Aktivitas', 'icons' => 'bx bx-run', 'route' => 'dashboard.activity.activity'],
         ['type' => 'divider', 'label' => 'Lainnya'],
         ['label' => 'Keluar', 'icons' => 'bx bx-left-arrow-alt', 'route' => null],
     ];
@@ -31,7 +32,8 @@
                         class="menu-link d-flex align-items-center">
                         <i
                             class="menu-icon tf-icons {{ $menu['icons'] }} {{ $isActive ? 'text-dark' : 'text-secondary' }}"></i>
-                        <div class="text-truncate {{ $isActive ? 'text-dark' : 'text-dark' }}">{{ $menu['label'] }}
+                        <div class="text-truncate {{ $isActive ? 'text-dark' : 'text-dark' }}">
+                            {{ $menu['label'] }}
                         </div>
                     </a>
                 </li>

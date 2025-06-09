@@ -71,89 +71,89 @@ class PorterController extends Controller
         ]);
     }
 
-   public function acceptOrder($orderId)
-{
-    // Ambil order beserta relasi penting
-    $order = Order::with([
-        'customer.department',
-        'items.product.tenant',
-        'tenantLocation',
-    ])->find($orderId);
+    public function acceptOrder($orderId)
+    {
+        // Ambil order beserta relasi penting
+        $order = Order::with([
+            'customer.department',
+            'items.product.tenant',
+            'tenantLocation',
+        ])->find($orderId);
 
-    // Validasi order ada
-    if (!$order) {
+        // Validasi order ada
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order tidak ditemukan.',
+            ], 404);
+        }
+
+        // Hanya bisa terima order dengan status "waiting" (5)
+        if ($order->order_status_id != 5) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order tidak dalam status menunggu penerimaan.',
+            ], 400);
+        }
+
+        // Pastikan porter belum mengerjakan order lain
+        $existingOrder = Order::where('porter_id', $order->porter_id)
+            ->where('order_status_id', 1) // sedang dikerjakan
+            ->where('id', '!=', $order->id)
+            ->first();
+
+        if ($existingOrder) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Porter sudah memiliki order yang sedang berjalan.',
+            ], 400);
+        }
+
+        // Update status order ke "accepted" (ID: 1)
+        $order->order_status_id = 1;
+        $order->save();
+
+        // Update status porter
+        $porter = Porter::find($order->porter_id);
+        if ($porter) {
+            $porter->isWorking = true;
+            $porter->porter_isOnline = false;
+            $porter->save();
+        }
+
+        // Kelompokkan order_items per tenant
+        $groupedItems = $order->items->groupBy('tenant_id')->map(function ($items, $tenantId) {
+            return [
+                'tenant_id' => (int) $tenantId,
+                'tenant_name' => optional(optional($items->first()->product)->tenant)->name ?? '-',
+                'items' => $items->map(function ($item) {
+                    return [
+                        'product_id' => $item->product_id,
+                        'product_name' => optional($item->product)->name,
+                        'quantity' => $item->quantity,
+                        'price' => $item->price,
+                        'subtotal' => $item->subtotal,
+                    ];
+                })->values(),
+            ];
+        })->values();
+
+        // Response sukses
         return response()->json([
-            'success' => false,
-            'message' => 'Order tidak ditemukan.',
-        ], 404);
+            'success' => true,
+            'message' => 'Order berhasil diterima dan diproses porter',
+            'data' => [
+                'order_id' => $order->id,
+                'customer_name' => optional($order->customer)->customer_name,
+                'department' => optional($order->customer->department)->department_name ?? '-',
+                'tenant_location_name' => optional($order->tenantLocation)->location_name ?? '-',
+                'total_price' => $order->total_price,
+                'status' => $order->order_status_id,
+                'created_at' => $order->created_at->toDateTimeString(),
+                'order_items' => $groupedItems,
+            ]
+        ]);
     }
-
-    // Hanya bisa terima order dengan status "waiting" (5)
-    if ($order->order_status_id != 5) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Order tidak dalam status menunggu penerimaan.',
-        ], 400);
-    }
-
-    // Pastikan porter belum mengerjakan order lain
-    $existingOrder = Order::where('porter_id', $order->porter_id)
-        ->where('order_status_id', 1) // sedang dikerjakan
-        ->where('id', '!=', $order->id)
-        ->first();
-
-    if ($existingOrder) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Porter sudah memiliki order yang sedang berjalan.',
-        ], 400);
-    }
-
-    // Update status order ke "accepted" (ID: 1)
-    $order->order_status_id = 1;
-    $order->save();
-
-    // Update status porter
-    $porter = Porter::find($order->porter_id);
-    if ($porter) {
-        $porter->isWorking = true;
-        $porter->porter_isOnline = false;
-        $porter->save();
-    }
-
-    // Kelompokkan order_items per tenant
-    $groupedItems = $order->items->groupBy('tenant_id')->map(function ($items, $tenantId) {
-        return [
-            'tenant_id' => (int) $tenantId,
-            'tenant_name' => optional(optional($items->first()->product)->tenant)->name ?? '-',
-            'items' => $items->map(function ($item) {
-                return [
-                    'product_id' => $item->product_id,
-                    'product_name' => optional($item->product)->name,
-                    'quantity' => $item->quantity,
-                    'price' => $item->price,
-                    'subtotal' => $item->subtotal,
-                ];
-            })->values(),
-        ];
-    })->values();
-
-    // Response sukses
-    return response()->json([
-        'success' => true,
-        'message' => 'Order berhasil diterima dan diproses porter',
-        'data' => [
-            'order_id' => $order->id,
-            'customer_name' => optional($order->customer)->customer_name,
-            'department' => optional($order->customer->department)->department_name ?? '-',
-            'tenant_location_name' => optional($order->tenantLocation)->location_name ?? '-',
-            'total_price' => $order->total_price,
-            'status' => $order->order_status_id,
-            'created_at' => $order->created_at->toDateTimeString(),
-            'order_items' => $groupedItems,
-        ]
-    ]);
-}
 
     public function rejectOrder($orderId)
     {
@@ -454,33 +454,38 @@ class PorterController extends Controller
         }
     }
 
-    // public function workSummary($porterId)
-    // {
-    //     // Ambil semua order yang sudah selesai oleh porter ini
-    //     $orders = OrderHistory::where('porter_id', $porterId)->get();
+    public function workSummary($porterId)
+    {
+        try {
+            // Ambil semua order yang memiliki porter_id sama
+            $orders = Order::where('porter_id', $porterId)->get();
 
-    //     if ($orders->isEmpty()) {
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Porter belum memiliki riwayat pekerjaan.',
-    //             'data' => [
-    //                 'total_earnings' => 0,
-    //                 'total_orders_handled' => 0,
-    //             ],
-    //         ]);
-    //     }
+            // Jika tidak ada order ditemukan
+            if ($orders->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No orders found for this porter.',
+                ], 404);
+            }
 
-    //     // Hitung total pendapatan dari shipping_cost dan total order yang ditangani
-    //     $totalEarnings = $orders->sum('shipping_cost');
-    //     $totalOrders = $orders->count();
+            // Hitung total order dan total pendapatan dari shipping cost
+            $totalOrders = $orders->count();
+            $totalIncome = $orders->sum('shipping_cost');
 
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => "Data pekerjaan porter ID: $porterId",
-    //         'data' => [
-    //             'total_earnings' => $totalEarnings,
-    //             'total_orders_handled' => $totalOrders,
-    //         ],
-    //     ]);
-    // }
+            return response()->json([
+                'success' => true,
+                'message' => 'Summary of orders handled by porter_id: ' . $porterId,
+                'data' => [
+                    'total_orders_handled' => $totalOrders,
+                    'total_income' => $totalIncome,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to calculate porter summary.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
