@@ -137,4 +137,19 @@ class PorterController extends Controller
         $porter->delete();
         return redirect()->route('dashboard.porters.index')->with('success', 'Porter berhasil dihapus.');
     }
+
+public function profileApi($id)
+{
+    $porter = Porter::with(['department', 'bankUser'])->findOrFail($id);
+
+    $rating = $porter->orders()->avg('rating');
+
+    return response()->json([
+        'porter_name' => $porter->porter_name,
+        'porter_nrp' => $porter->porter_nrp,
+        'department' => $porter->department?->department_name,
+        'rating' => $rating ? round($rating, 2) : null,
+        'account_number' => $porter->bankUser?->account_number,
+    ]);
+}
 }
