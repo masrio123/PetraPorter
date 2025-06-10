@@ -92,11 +92,11 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/porters/{porterId}/orderList', [ApiPorterController::class, 'orderList']);
 Route::post('/porters/{orderId}/accept', [ApiPorterController::class, 'acceptOrder']);
 Route::post('/porters/{orderId}/reject', [ApiPorterController::class, 'rejectOrder']);
-Route::get('/porters/{porterId}/accepted-orders', [ApiPorterController::class, 'viewAcceptedOrders']);
+Route::post('/porters/{porterId}/accepted-orders', [ApiPorterController::class, 'viewAcceptedOrders']);
 Route::put('/porters/{orderId}/deliver', [ApiPorterController::class, 'deliverOrder']);
 Route::post('/porters/{orderId}/finish', [ApiPorterController::class, 'finishOrder']);
-Route::get('/porters/{porterId}/workSummary', [ApiPorterController::class, 'workSummary']);
-Route::get('/porters/{porterId}', [ApiPorterController::class, 'getPorterActivity']);
+Route::post('/porters/{porterId}/workSummary', [ApiPorterController::class, 'workSummary']);
+Route::post('/porters/{porterId}', [ApiPorterController::class, 'getPorterActivity']);
 
 
 
