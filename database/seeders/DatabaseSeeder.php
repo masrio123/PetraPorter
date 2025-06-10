@@ -319,4 +319,49 @@ class DatabaseSeeder extends Seeder
             ]);
         }
     }
+    // Seed untuk dummy order
+    for ($i = 0; $i < 20; $i++) {
+    $customer = \App\Models\Customer::inRandomOrder()->first();
+    $porter = \App\Models\Porter::inRandomOrder()->first();
+    $tenant = \App\Models\Tenant::inRandomOrder()->first();
+    $products = \App\Models\Product::where('tenant_id', $tenant->id)->inRandomOrder()->take(rand(1, 3))->get();
+    $deliveryPoint = \App\Models\DeliveryPoint::inRandomOrder()->first();
+
+    $total_price = $products->sum('price');
+
+    $order = \App\Models\Order::create([
+        'customer_id' => $customer->id,
+        'porter_id' => $porter->id,
+        'tenant_id' => $tenant->id,
+        'tenant_location_id' => $tenant->tenant_location_id,
+        'delivery_point_id' => $deliveryPoint->id,
+        'total_price' => $total_price,
+        'order_status_id' => \DB::table('order_statuses')->inRandomOrder()->first()->id,
+        'notes' => 'Contoh catatan ' . $i,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    foreach ($products as $product) {
+        \App\Models\OrderDetail::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'quantity' => rand(1, 2),
+            'price' => $product->price,
+        ]);
+    }
+
+    \App\Models\OrderHistory::create([
+        'order_id' => $order->id,
+        'customer_name' => $customer->customer_name,
+        'porter_name' => $porter->porter_name,
+        'tenant_name' => $tenant->name,
+        'tenant_location_name' => $tenant->location->location_name,
+        'delivery_point_name' => $deliveryPoint->delivery_point_name,
+        'total_price' => $total_price,
+        'status' => $order->status->order_status,
+        'notes' => $order->notes,
+        'created_at' => $order->created_at,
+    ]);
+}
 }
