@@ -322,7 +322,7 @@ class DatabaseSeeder extends Seeder
     // Seed untuk dummy order
     for ($i = 0; $i < 20; $i++) {
     $customer = \App\Models\Customer::inRandomOrder()->first();
-    $porter = \App\Models\Porter::inRandomOrder()->first();
+    $porter = \App\Models\Porter::find(1);
     $tenant = \App\Models\Tenant::inRandomOrder()->first();
     $products = \App\Models\Product::where('tenant_id', $tenant->id)->inRandomOrder()->take(rand(1, 3))->get();
     $deliveryPoint = \App\Models\DeliveryPoint::inRandomOrder()->first();
