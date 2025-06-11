@@ -87,36 +87,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Tenant Location
     Route::get('/tenant-locations', [ApiTenantLocationController::class, 'index']);
+    
+    Route::get('/porters/{porterId}/orderList', [ApiPorterController::class, 'orderList']);
+    Route::post('/porters/{orderId}/accept', [ApiPorterController::class, 'acceptOrder']);
+    Route::post('/porters/{orderId}/reject', [ApiPorterController::class, 'rejectOrder']);
+    Route::post('/porters/{porterId}/accepted-orders', [ApiPorterController::class, 'viewAcceptedOrders']);
+    Route::put('/porters/{orderId}/deliver', [ApiPorterController::class, 'deliverOrder']);
+    Route::post('/porters/{orderId}/finish', [ApiPorterController::class, 'finishOrder']);
+    Route::post('/porters/{porterId}/workSummary', [ApiPorterController::class, 'workSummary']);
+    Route::post('/porters/{porterId}', [ApiPorterController::class, 'getPorterActivity']);
+    Route::post('/porters/profile/{porterId}', [ApiPorterController::class, 'profileApi']);
+    Route::post('/porter/{id}/toggle-is-open', [ApiPorterController::class, 'getToggleIsOpen']);
+    Route::put('/porter/{id}/toggle-is-open', [ApiPorterController::class, 'UpdateToggleIsOpen']);
 });
 
-Route::get('/porters/{porterId}/orderList', [ApiPorterController::class, 'orderList']);
-Route::post('/porters/{orderId}/accept', [ApiPorterController::class, 'acceptOrder']);
-Route::post('/porters/{orderId}/reject', [ApiPorterController::class, 'rejectOrder']);
-Route::post('/porters/{porterId}/accepted-orders', [ApiPorterController::class, 'viewAcceptedOrders']);
-Route::put('/porters/{orderId}/deliver', [ApiPorterController::class, 'deliverOrder']);
-Route::post('/porters/{orderId}/finish', [ApiPorterController::class, 'finishOrder']);
-Route::post('/porters/{porterId}/workSummary', [ApiPorterController::class, 'workSummary']);
-Route::post('/porters/{porterId}', [ApiPorterController::class, 'getPorterActivity']);
-Route::get('/porters/profile/{porterId}', [ApiPorterController::class, 'profileApi']);
 
-
-
-
-
-// Route::get('/products', [ProductController::class, 'fetchAllProducts']);
-// Route::get('/tenants', [TenantController::class, 'index']);
-// Route::post('/tenants/add', [TenantController::class, 'store']);
-// Route::get('/tenants/show/{id}', [TenantController::class, 'show']);
-// Route::put('/tenants/edit/{id}', [TenantController::class, 'update']);
-// Route::delete('/tenants/delete/{id}', [TenantController::class, 'destroy']);
-// Route::resource('tenants', TenantController::class);
-
-// Route::get('/admin', [TenantController::class, 'viewTable'])->name(name: 'tenants.admin');
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-//     return $request->user();
-// })->middleware('auth:sanctum');
-
-// Route::get('/base', function () {
-//     return view('layouts/app');
-// });

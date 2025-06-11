@@ -499,4 +499,51 @@ class PorterController extends Controller
             'account_number' => $porter->bankUser?->account_number,
         ]);
     }
+
+      public function getToggleIsOpen($id)
+    {
+        $porter = Porter::find($id);
+
+        if (!$porter) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Porter tidak ditemukan.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'porter_isOnline' => $porter->porter_isOnline == 1 ? true : false
+            ]
+        ]);
+    }
+
+    // PUT: Ubah status isOnline porter
+    public function updateToggleIsOpen(Request $request, $id)
+    {
+        $request->validate([
+            'porter_isOnline' => 'required|boolean'
+        ]);
+
+        $porter = Porter::find($id);
+
+        if (!$porter) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Porter tidak ditemukan.'
+            ], 404);
+        }
+
+        $porter->porter_isOnline = $request->porter_isOnline;
+        $porter->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status online berhasil diperbarui.',
+            'data' => [
+                'porter_isOnline' => $porter->porter_isOnline == 1 ? true : false
+            ]
+        ]);
+    }
 }
