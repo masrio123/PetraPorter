@@ -75,11 +75,11 @@ class OrderItemController extends Controller
             }
 
             // Jika porter sudah ditetapkan tapi status masih 5
-            return response()->json([
-                'success' => true,
-                'message' => 'Order ini sudah memiliki porter.',
-                'status' => 'Sedang menunggu porter'
-            ]);
+            // return response()->json([
+            //     'success' => true,
+            //     'message' => 'Order ini sudah memiliki porter.',
+            //     'status' => 'Sedang menunggu porter'
+            // ]);
         }
 
         // KASUS STATUS LABEL: 1, 2, 3
