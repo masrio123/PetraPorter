@@ -68,14 +68,6 @@ class TenantController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        $tenant = Tenant::with('location')->findOrFail($id);
-
-        return view('dashboard.tenant.show', [
-            'tenant' => $tenant,
-        ]);
-    }
 
     /**
      * Show the form for editing the specified resource.

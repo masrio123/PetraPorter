@@ -202,7 +202,7 @@ class PorterController extends Controller
             $porter->save();
 
             // Set order ke status waiting lagi
-            $order->order_status_id = 7;
+            $order->order_status_id = 5;
             $order->porter_id = null; // kosongkan porter
             $order->save();
 
@@ -224,7 +224,7 @@ class PorterController extends Controller
             $porter->save();
 
             // Reset order agar bisa dicari porter lain
-            $order->order_status_id = 7;
+            $order->order_status_id = 5;
             $order->porter_id = null;
             $order->save();
 
@@ -487,5 +487,16 @@ class PorterController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+    public function profileApi($id)
+    {
+        $porter = Porter::with(['department', 'bankUser'])->findOrFail($id);
+
+        return response()->json([
+            'porter_name' => $porter->porter_name,
+            'porter_nrp' => $porter->porter_nrp,
+            'department' => $porter->department?->department_name,
+            'account_number' => $porter->bankUser?->account_number,
+        ]);
     }
 }

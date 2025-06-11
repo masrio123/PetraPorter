@@ -97,6 +97,7 @@ Route::put('/porters/{orderId}/deliver', [ApiPorterController::class, 'deliverOr
 Route::post('/porters/{orderId}/finish', [ApiPorterController::class, 'finishOrder']);
 Route::post('/porters/{porterId}/workSummary', [ApiPorterController::class, 'workSummary']);
 Route::post('/porters/{porterId}', [ApiPorterController::class, 'getPorterActivity']);
+Route::get('/porters/profile/{porterId}', [ApiPorterController::class, 'profileApi']);
 
 
 

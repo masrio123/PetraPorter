@@ -20,10 +20,10 @@ Route::group(['prefix' => 'auth'], function () {
 Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
     Route::resource('/tenants', TenantController::class);
-    Route::resource('/porters', PorterController::class);
+    Route::resource('/porters', controller: PorterController::class);
     Route::resource('/delivery-points', DeliveryPointController::class);
-    Route::resource('/bank-users', BankUserController::class);
-    Route::get('/activities', [ActivityController::class, 'index'])->name('activity.activity');
+    Route::resource('/bank-users', controller: BankUserController::class);
+    Route::get('/activities', action: [ActivityController::class, 'index'])->name('activity.activity');
 });
 
 Route::patch('/dashboard/delivery-points/{id}/toggle-status', [DeliveryPointController::class, 'toggleStatus'])

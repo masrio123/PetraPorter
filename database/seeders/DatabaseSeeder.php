@@ -3,13 +3,19 @@
 namespace Database\Seeders;
 
 use App\Models\Bank;
+use App\Models\Cart;
 use App\Models\User;
+use App\Models\Order;
 use App\Models\Porter;
 use App\Models\Tenant;
 use App\Models\Product;
 use App\Models\BankUser;
 use App\Models\Category;
+use App\Models\Customer;
+use App\Models\OrderItem;
 use App\Models\Department;
+use App\Models\OrderDetail;
+use App\Models\OrderHistory;
 use App\Models\DeliveryPoint;
 use App\Models\TenantLocation;
 use Illuminate\Database\Seeder;
@@ -318,50 +324,58 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ]);
         }
+
+        // Seed untuk dummy order
+       for ($i = 0; $i < 20; $i++) {
+    $customer = Customer::inRandomOrder()->first();
+    $tenant = Tenant::inRandomOrder()->first();
+    $products = Product::where('tenant_id', $tenant->id)->inRandomOrder()->take(rand(1, 3))->get();
+    $deliveryPoint = DeliveryPoint::inRandomOrder()->first();
+
+    $shipping_cost = 10000;
+    $total_price = 0;
+
+    // Hitung total_price berdasarkan subtotal semua product
+    $productQtyMap = [];
+    foreach ($products as $product) {
+        $qty = rand(1, 3);
+        $total_price += $product->price * $qty;
+        $productQtyMap[] = ['product' => $product, 'qty' => $qty];
     }
-    // Seed untuk dummy order
-    for ($i = 0; $i < 20; $i++) {
-    $customer = \App\Models\Customer::inRandomOrder()->first();
-    $porter = \App\Models\Porter::find(1);
-    $tenant = \App\Models\Tenant::inRandomOrder()->first();
-    $products = \App\Models\Product::where('tenant_id', $tenant->id)->inRandomOrder()->take(rand(1, 3))->get();
-    $deliveryPoint = \App\Models\DeliveryPoint::inRandomOrder()->first();
 
-    $total_price = $products->sum('price');
-
-    $order = \App\Models\Order::create([
+    // Buat atau ambil cart berdasarkan kombinasi customer & tenant_location
+    $cart = Cart::firstOrCreate([
         'customer_id' => $customer->id,
-        'porter_id' => $porter->id,
-        'tenant_id' => $tenant->id,
         'tenant_location_id' => $tenant->tenant_location_id,
-        'delivery_point_id' => $deliveryPoint->id,
+    ]);
+
+    // Buat order
+    $order = Order::create([
+        'cart_id' => $cart->id,
+        'customer_id' => $customer->id,
+        'tenant_location_id' => $tenant->tenant_location_id,
+        'order_status_id' => DB::table('order_statuses')->inRandomOrder()->first()->id,
         'total_price' => $total_price,
-        'order_status_id' => \DB::table('order_statuses')->inRandomOrder()->first()->id,
-        'notes' => 'Contoh catatan ' . $i,
+        'shipping_cost' => $shipping_cost,
+        'grand_total' => $total_price + $shipping_cost,
+        'porter_id' => 1,
         'created_at' => now(),
         'updated_at' => now(),
     ]);
 
-    foreach ($products as $product) {
-        \App\Models\OrderDetail::create([
+    // Buat order item
+    foreach ($productQtyMap as $item) {
+        OrderItem::create([
             'order_id' => $order->id,
-            'product_id' => $product->id,
-            'quantity' => rand(1, 2),
-            'price' => $product->price,
+            'product_id' => $item['product']->id,
+            'tenant_id' => $tenant->id,
+            'quantity' => $item['qty'],
+            'price' => $item['product']->price,
+            'subtotal' => $item['product']->price * $item['qty'],
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
-
-    \App\Models\OrderHistory::create([
-        'order_id' => $order->id,
-        'customer_name' => $customer->customer_name,
-        'porter_name' => $porter->porter_name,
-        'tenant_name' => $tenant->name,
-        'tenant_location_name' => $tenant->location->location_name,
-        'delivery_point_name' => $deliveryPoint->delivery_point_name,
-        'total_price' => $total_price,
-        'status' => $order->status->order_status,
-        'notes' => $order->notes,
-        'created_at' => $order->created_at,
-    ]);
 }
+    }
 }
