@@ -17,139 +17,131 @@ class OrderItemController extends Controller
 {
 
     // Cari porter untuk order tertentu
-    public function searchPorter($orderId)
-    {
-        $order = Order::with([
-            'customer.department',
-            'status',
-            'porter.department',
-            'porter.bankUser',
-            'tenantLocation',
-            'items.product.tenant'
-        ])->find($orderId);
+        public function searchPorter($orderId)
+        {
+            $order = Order::with([
+                'customer.department',
+                'status',
+                'porter.department',
+                'porter.bankUser',
+                'tenantLocation',
+                'items.product.tenant'
+            ])->find($orderId);
 
-        if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order tidak ditemukan.',
-            ], 404);
-        }
+            if (!$order) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order tidak ditemukan.',
+                ], 404);
+            }
 
-        $orderStatusId = $order->order_status_id;
+            $orderStatusId = $order->order_status_id;
 
-        // KASUS STATUS KHUSUS: 4 dan 5 → Langsung return string
-        // if ($orderStatusId == 4) {
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'Order ini sudah dibatalkan.',
-        //         'status' => 'Order dibatalkan'
-        //     ], 400);
-        // }
+            $systemMessage = "order sudah memiliki porter";
 
-        if ($orderStatusId == 5) {
-            // Tetap cari porter jika belum ada
-            if (!$order->porter_id) {
-                $porter = Porter::with(['department', 'bankUser'])
-                    ->where('porter_isOnline', true)
-                    ->inRandomOrder()
-                    ->first();
+            if ($orderStatusId == 5) {
+                // Tetap cari porter jika belum ada
+                if (!$order->porter_id) {
+                    $porter = Porter::with(['department', 'bankUser'])
+                        ->where('porter_isOnline', true)
+                        ->inRandomOrder()
+                        ->first();
 
-                if (!$porter) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Tidak ada porter online saat ini.',
-                        'status' => 'Sedang menunggu porter'
-                    ], 404);
+                    if (!$porter) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Tidak ada porter online saat ini.',
+                            'status' => 'Sedang menunggu porter'
+                        ], 404);
+                    }
+
+                    $order->porter_id = $porter->id;
+                    $order->save();
+
+                    $systemMessage = "Sistem menunjuk porter bernama {$porter->porter_name}, {$porter->porter_nrp} dari jurusan {$porter->department->department_name}";
+
+                }   
+            }
+
+            // KASUS STATUS LABEL: 1, 2, 3
+            $statusLabelMap = [
+                1 => 'Pesanan diterima',
+                2 => 'Sedang dalam perjalanan',
+                3 => 'Telah sampai ke customer',
+            ];
+
+            $statusArray = [];
+            foreach ($statusLabelMap as $id => $label) {
+                $statusArray[] = [
+                    'label' => $label,
+                    'key' => $orderStatusId === $id,
+                ];
+            }
+
+            // get order lagi
+
+            $order = Order::with([
+                'customer.department',
+                'status',
+                'porter.department',
+                'porter.bankUser',
+                'tenantLocation',
+                'items.product.tenant'
+            ])->find($orderId);
+
+            // Jika sudah ada porter
+            if ($order->porter_id) {
+                $groupedItems = [];
+
+                foreach ($order->items as $item) {
+                    $tenantName = $item->product->tenant->name;
+
+                    if (!isset($groupedItems[$tenantName])) {
+                        $groupedItems[$tenantName] = [
+                            'tenant_name' => $tenantName,
+                            'products' => []
+                        ];
+                    }
+
+                    $groupedItems[$tenantName]['products'][] = [
+                        'product_name' => $item->product->name,
+                        'quantity' => $item->quantity,
+                        'price' => number_format($item->price, 2, '.', ''),
+                        'subtotal' => number_format($item->price * $item->quantity, 2, '.', '')
+                    ];
                 }
-
-                $order->porter_id = $porter->id;
-                $order->save();
-
-                $systemMessage = "Sistem menunjuk porter bernama {$porter->porter_name}, {$porter->porter_nrp} dari jurusan {$porter->department->department_name}";
 
                 return response()->json([
                     'success' => true,
                     'message' => $systemMessage,
-                    'status' => 'Sedang menunggu porter'
+                    'status' => $statusArray,
+                    'data' => [
+                        'order_id' => $order->id,
+                        'order_status' => $order->status->order_status,
+                        'tenant_location_name' => $order->tenantLocation->location_name ?? '-',
+                        'total_price' => number_format($order->total_price, 2, '.', ''),
+                        'shipping_cost' => number_format($order->shipping_cost, 2, '.', ''),
+                        'grand_total' => number_format($order->grand_total, 2, '.', ''),
+                        'created_at' => $order->created_at->format('Y-m-d H:i:s'),
+                        'porter' => [
+                            'porter_id' => $order->porter->id,
+                            'name' => $order->porter->porter_name,
+                            'nrp' => $order->porter->porter_nrp,
+                            'department' => $order->porter->department->department_name ?? '-',
+                            'account_number' => $order->porter->bankUser->account_number ?? '-',
+                        ],
+                        'items' => array_values($groupedItems)
+                    ]
                 ]);
             }
 
-            // Jika porter sudah ditetapkan tapi status masih 5
-            // return response()->json([
-            //     'success' => true,
-            //     'message' => 'Order ini sudah memiliki porter.',
-            //     'status' => 'Sedang menunggu porter'
-            // ]);
-        }
-
-        // KASUS STATUS LABEL: 1, 2, 3
-        $statusLabelMap = [
-            1 => 'Pesanan diterima',
-            2 => 'Sedang dalam perjalanan',
-            3 => 'Telah sampai ke customer',
-        ];
-
-        $statusArray = [];
-        foreach ($statusLabelMap as $id => $label) {
-            $statusArray[] = [
-                'label' => $label,
-                'key' => $orderStatusId === $id,
-            ];
-        }
-
-        // Jika sudah ada porter
-        if ($order->porter_id) {
-            $groupedItems = [];
-
-            foreach ($order->items as $item) {
-                $tenantName = $item->product->tenant->name;
-
-                if (!isset($groupedItems[$tenantName])) {
-                    $groupedItems[$tenantName] = [
-                        'tenant_name' => $tenantName,
-                        'products' => []
-                    ];
-                }
-
-                $groupedItems[$tenantName]['products'][] = [
-                    'product_name' => $item->product->name,
-                    'quantity' => $item->quantity,
-                    'price' => number_format($item->price, 2, '.', ''),
-                    'subtotal' => number_format($item->price * $item->quantity, 2, '.', '')
-                ];
-            }
-
+            // Harusnya ini ga kena lagi karena 5 udah ditangani di atas
             return response()->json([
-                'success' => true,
-                'message' => 'Order ini sudah memiliki porter yang menangani.',
-                'status' => $statusArray,
-                'data' => [
-                    'order_id' => $order->id,
-                    'order_status' => $order->status->order_status,
-                    'tenant_location_name' => $order->tenantLocation->location_name ?? '-',
-                    'total_price' => number_format($order->total_price, 2, '.', ''),
-                    'shipping_cost' => number_format($order->shipping_cost, 2, '.', ''),
-                    'grand_total' => number_format($order->grand_total, 2, '.', ''),
-                    'created_at' => $order->created_at->format('Y-m-d H:i:s'),
-                    'porter' => [
-                        'porter_id' => $order->porter->id,
-                        'name' => $order->porter->porter_name,
-                        'nrp' => $order->porter->porter_nrp,
-                        'department' => $order->porter->department->department_name ?? '-',
-                        'account_number' => $order->porter->bankUser->account_number ?? '-',
-                    ],
-                    'items' => array_values($groupedItems)
-                ]
-            ]);
+                'success' => false,
+                'message' => 'Porter belum ditetapkan dan status order bukan status pencarian porter.',
+                'status' => $statusArray
+            ], 400);
         }
-
-        // Harusnya ini ga kena lagi karena 5 udah ditangani di atas
-        return response()->json([
-            'success' => false,
-            'message' => 'Porter belum ditetapkan dan status order bukan status pencarian porter.',
-            'status' => $statusArray
-        ], 400);
-    }
 
 
 
