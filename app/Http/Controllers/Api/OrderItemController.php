@@ -38,13 +38,13 @@ class OrderItemController extends Controller
         $orderStatusId = $order->order_status_id;
 
         // KASUS STATUS KHUSUS: 4 dan 5 → Langsung return string
-        if ($orderStatusId == 4) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order ini sudah dibatalkan.',
-                'status' => 'Order dibatalkan'
-            ], 400);
-        }
+        // if ($orderStatusId == 4) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Order ini sudah dibatalkan.',
+        //         'status' => 'Order dibatalkan'
+        //     ], 400);
+        // }
 
         if ($orderStatusId == 5) {
             // Tetap cari porter jika belum ada

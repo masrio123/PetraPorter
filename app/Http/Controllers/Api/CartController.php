@@ -20,16 +20,6 @@ class CartController extends Controller
                 'tenant_location_id' => 'required|exists:tenant_locations,id',
             ]);
 
-            $existingCart = Cart::where('customer_id', $request->customer_id)
-                ->where('tenant_location_id', $request->tenant_location_id)
-                ->first();
-
-            if ($existingCart) {
-                return response()->json([
-                    'message' => 'Cart already exists for this user in this location.',
-                    'cart' => $existingCart->only(['id', 'customer_id', 'tenant_location_id']),
-                ], 200);
-            }
 
             $cart = Cart::create([
                 'customer_id' => $request->customer_id,
