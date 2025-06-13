@@ -26,7 +26,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-
+    
     //Product
     Route::get('/products', [ApiProductController::class, 'fetchAllProducts']);
     Route::get('/products/{id}/tenants-products', [ApiProductController::class, 'getProductsByTenantLocation']);

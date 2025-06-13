@@ -13,20 +13,26 @@ use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
-    public function fetchAllProducts(): JsonResponse
+    public function fetchAllProducts(Request $request): JsonResponse
     {
-        $categories = Category::with('products')->get();
+        $tenantId = $request->query('tenant_id'); // ambil dari query param
+
+        $categories = Category::with(['products' => function ($query) use ($tenantId) {
+            if ($tenantId) {
+                $query->where('tenant_id', $tenantId);
+            }
+        }])->get();
 
         $data = $categories->map(function ($category) {
             return [
-                'id' => $category->id, // <-- penting untuk model Flutter
+                'id' => $category->id,
                 'category_name' => $category->category_name,
                 'products' => $category->products->map(function ($product) {
                     return [
                         'id' => $product->id,
                         'name' => $product->name,
                         'price' => $product->price,
-                        'is_available' => $product->isAvailable, // <-- sesuaikan key agar snake_case
+                        'is_available' => $product->isAvailable,
                         'created_at' => $product->created_at,
                         'updated_at' => $product->updated_at,
                     ];
@@ -37,7 +43,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Products grouped by category',
-            'data' => $data
+            'data' => $data,
         ]);
     }
 
@@ -143,9 +149,9 @@ class ProductController extends Controller
             Log::info('Request all:', $request->all());
 
             $validated = $request->validate([
-                'name' => 'sometimes|string',
-                'price' => 'sometimes|numeric',
-                'isAvailable' => 'sometimes|boolean',
+                'name' => 'required',
+                'price' => 'required',
+                'isAvailable' => 'required',
             ]);
 
             Log::info('Validated data:', $validated);
