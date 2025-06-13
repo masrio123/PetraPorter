@@ -45,7 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/cart/{id}', [ApiCartController::class, 'showCart']);
     Route::delete('/cart/{id}', [ApiCartController::class, 'deleteCart']);
     Route::post('/cart/{id}/checkout', action: [ApiCartController::class, 'checkoutCart']);
-    Route::get('/allCarts', [ApiCartController::class, 'getAllCarts']);
+    Route::get('/allCarts/{tenantId}', [ApiCartController::class, 'getAllCarts']);
 
     //Cart Item
     Route::post('/cart-items', [ApiCartItemController::class, 'addItems']);
