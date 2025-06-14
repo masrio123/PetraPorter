@@ -257,7 +257,7 @@ class OrderItemController extends Controller
                 'items.product',
                 'tenantLocation'
             ])
-            ->whereNotIn('order_status_id', [6, 8]) // 6 = canceled, 8 = finished (anggap ini status selesai)
+            ->whereIn('order_status_id', [2, 5]) // 6 = canceled, 8 = finished (anggap ini status selesai)
             ->orderBy('created_at', 'desc')
             ->get();
 
