@@ -44,6 +44,8 @@ class OrderItemController extends Controller
                 if (!$order->porter_id) {
                     $porter = Porter::with(['department', 'bankUser'])
                         ->where('porter_isOnline', true)
+                        ->where('timeout_until', null)
+                        ->orWhere('timeout_until', '<=', \Carbon\Carbon::now())
                         ->inRandomOrder()
                         ->first();
 
