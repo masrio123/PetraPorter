@@ -10,6 +10,8 @@ use App\Models\OrderHistory;
 use App\Models\PorterRating;
 use Illuminate\Http\Request;
 use App\Models\OrderHistoryItem;
+use App\Models\Cart;
+use App\Models\DeliveryPoint;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 
@@ -281,11 +283,14 @@ class OrderItemController extends Controller
                 ])
                 ->values();
 
+            $cart = Cart::where('id', $order->cart_id)->first();
+            $delivery_point_name = DeliveryPoint::where('id', $cart->delivery_point_id)->first()->delivery_point_name;
+
             return [
                 'order_id' => $order->id,
                 'customer_name' => $order->customer->customer_name ?? '-',
                 'order_status' => $order->status->order_status,
-                'tenant_location_name' => $order->tenantLocation->location_name ?? '-',
+                'tenant_location_name' => $delivery_point_name ?? '-',
                 'created_at' => $order->created_at->format('Y-m-d H:i:s'),
                 'items' => $items,
                 'porter_name' => $order->porter ? $order->porter->porter_name : "Belum Ada Porter"

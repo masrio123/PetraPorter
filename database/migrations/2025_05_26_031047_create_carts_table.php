@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('customer_id')->constrained('customers');
             $table->foreignId('tenant_location_id')->constrained('tenant_locations');
+            $table->integer('delivery_point_id')->nullable();
             $table->foreignId('user_id')->nullable(); // kalau pakai user
             $table->timestamps();
         });

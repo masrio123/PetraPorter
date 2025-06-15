@@ -18,6 +18,7 @@ class TenantController extends Controller
             "tenants.isOpen",
         ])
             ->join('tenant_locations', 'tenants.tenant_location_id', '=', 'tenant_locations.id')
+            ->where('isOpen', 1)
             ->get()
             ->map(function ($tenant) {
                 return [

@@ -347,6 +347,7 @@ class DatabaseSeeder extends Seeder
             $cart = Cart::firstOrCreate([
                 'customer_id' => $customer->id,
                 'tenant_location_id' => $tenant->tenant_location_id,
+                'delivery_point_id' => rand(1, 12)
             ]);
 
             // Buat order

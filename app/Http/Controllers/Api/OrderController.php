@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\DeliveryPoint;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -66,6 +67,17 @@ class OrderController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function getDeliverypoints()
+    {
+        $delivery = DeliveryPoint::get();
+
+        return response()->json([
+                'success' => true,
+                'message' => 'List of all delivery point',
+                'data' => $delivery,
+            ], 200);
     }
 
     public function fetchOrderById($id)

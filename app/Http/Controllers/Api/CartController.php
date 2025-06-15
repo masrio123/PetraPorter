@@ -18,13 +18,14 @@ class CartController extends Controller
             $request->validate([
                 'customer_id' => 'required|exists:customers,id',
                 'tenant_location_id' => 'required|exists:tenant_locations,id',
+                'delivery_id' => 'required'
             ]);
 
 
             $cart = Cart::create([
                 'customer_id' => $request->customer_id,
                 'tenant_location_id' => $request->tenant_location_id,
-                // order_status_id dibiarkan null
+                'delivery_point_id' => $request->delivery_id
             ]);
 
             return response()->json([

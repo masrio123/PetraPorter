@@ -85,6 +85,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/activity/{customerId}', [ApiOrderController::class, 'getCustomerActivity']);
     });
 
+    Route::get('/delivery-points', [ApiOrderController::class, 'getDeliverypoints']);
+
     //Tenant Location
     Route::get('/tenant-locations', [ApiTenantLocationController::class, 'index']);
     
