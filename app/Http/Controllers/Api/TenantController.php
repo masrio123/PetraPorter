@@ -158,7 +158,10 @@ class TenantController extends Controller
 
     public function fetchTenantsByLocation($tenantLocationId)
     {
-        $tenantLocation = TenantLocation::with('tenants:id,name,tenant_location_id')->find($tenantLocationId);
+        $tenantLocation = Tenant::where([
+            'isOpen' => 1,
+            'tenant_location_id' => $tenantLocationId
+        ])->get();
 
         if (!$tenantLocation) {
             return response()->json([
@@ -171,7 +174,7 @@ class TenantController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Tenant found',
-            'data' => $tenantLocation->tenants
+            'data' => $tenantLocation
         ]);
     }
 }
