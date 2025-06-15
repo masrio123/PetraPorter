@@ -14,7 +14,7 @@ Route::post('/', function () {
 });
 
 Route::group(['prefix' => 'auth'], function () {
-    Route::get('/login', [AuthController::class, 'index'])->name('login');
+    Route::post('/login', [AuthController::class, 'index'])->name('login');
 });
 
 Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {

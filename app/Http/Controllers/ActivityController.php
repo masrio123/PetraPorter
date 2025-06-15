@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Order;
+use Carbon\Carbon;
+
 
 class ActivityController extends Controller
 {
@@ -74,11 +76,30 @@ class ActivityController extends Controller
         });
     }
 
+    public static function getDailySummary()
+    {
+        $today = Carbon::today();
+
+        $completedOrders = Order::with('status')
+            ->whereHas('status', function ($query) {
+                $query->where('order_status', 'finished');
+            })
+            ->whereDate('created_at', $today)
+            ->get();
+
+        return [
+            'date' => $today->toDateString(),
+            'total_orders_completed' => $completedOrders->count(),
+            'total_income' => $completedOrders->sum('grand_total'),
+        ];
+    }
+
     public function index()
     {
         $activities = $this->getAllActivities();
+        $summary = $this->getDailySummary(); // <- ini penting!
         $porterId = 'Semua Porter';
 
-        return view('dashboard.activity.activity', compact('activities', 'porterId'));
+        return view('dashboard.activity.activity', compact('activities', 'porterId', 'summary'));
     }
 }
