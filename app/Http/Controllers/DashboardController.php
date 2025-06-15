@@ -9,9 +9,13 @@ class DashboardController extends Controller
     /**
      * Display a listing of the resource.
      */
+
     public function index()
     {
-        return view("dashboard.index");
+        $summary = ActivityController::getDailySummary(); // Ambil data ringkasan order
+        $onlinePorterCount = PorterController::countOnlinePorters(); // Ambil jumlah porter online
+
+        return view("dashboard.index", compact('summary', 'onlinePorterCount')); // Kirim dua data ke blade
     }
 
     /**

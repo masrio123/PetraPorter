@@ -138,5 +138,11 @@ class PorterController extends Controller
         return redirect()->route('dashboard.porters.index')->with('success', 'Porter berhasil dihapus.');
     }
 
+        public static function countOnlinePorters()
+    {
+        return Porter::where('porter_isOnline', true)->count();
+    }
+
+
 
 }

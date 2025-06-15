@@ -2,7 +2,7 @@
     <!-- Burger menu untuk mobile -->
     <div class="navbar-nav d-xl-none me-3">
         <a class="nav-link px-0" href="javascript:void(0)" id="menu-toggle">
-            <i class="bx bx-menu fs-4"></i>
+          
         </a>
     </div>
     <!-- Bagian kanan -->
