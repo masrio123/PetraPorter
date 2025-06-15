@@ -255,7 +255,8 @@ class OrderItemController extends Controller
                 'status',
                 'customer',
                 'items.product',
-                'tenantLocation'
+                'tenantLocation',
+                'porter'
             ])
             ->whereIn('order_status_id', [2, 5]) // 6 = canceled, 8 = finished (anggap ini status selesai)
             ->orderBy('created_at', 'desc')
@@ -286,7 +287,8 @@ class OrderItemController extends Controller
                 'order_status' => $order->status->order_status,
                 'tenant_location_name' => $order->tenantLocation->location_name ?? '-',
                 'created_at' => $order->created_at->format('Y-m-d H:i:s'),
-                'items' => $items
+                'items' => $items,
+                'porter_name' => $order->porter ? $order->porter->porter_name : "Belum Ada Porter"
             ];
         });
 
