@@ -70,6 +70,8 @@ class ProductController extends Controller
                 $category = $product->category;
                 if (!$category) continue;
 
+                if($product->isAvailable == 0) continue;
+
                 $categoryId = $category->id;
 
                 if (!isset($categories[$categoryId])) {
