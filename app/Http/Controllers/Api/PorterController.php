@@ -7,8 +7,6 @@ use App\Models\Porter;
 use App\Models\BankUser;
 use App\Models\Department;
 use App\Models\OrderHistory;
-use App\Models\Cart;
-use App\Models\DeliveryPoint;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -285,16 +283,13 @@ class PorterController extends Controller
                     ];
                 })->values();
 
-                $cart = Cart::where('id', $order->cart_id)->first();
-                $delivery_point_name = DeliveryPoint::where('id', $cart->delivery_point_id)->first()->delivery_point_name;
-
                 return [
                     'order_id' => $order->id,
                     'cart_id' => $order->cart_id ?? null,
                     'customer_id' => $order->customer->id ?? null,
                     'customer_name' => $order->customer->customer_name ?? '-',
                     'tenant_location_id' => $order->tenantLocation->id ?? null,
-                    'tenant_location_name' => $delivery_point_name ?? '-',
+                    'tenant_location_name' => $order->tenantLocation->location_name ?? '-',
                     'order_status' => optional($order->status)->order_status ?? '-',
                     'items' => $groupedItems,
                     'total_price' => $order->total_price,
@@ -336,14 +331,6 @@ class PorterController extends Controller
         $order->order_status_id = 2;
         $order->save();
 
-        // Update status porter
-        $porter = Porter::find($order->porter_id);
-        if ($porter) {
-            $porter->isWorking = false;
-            $porter->porter_isOnline = true;
-            $porter->save();
-        }
-
         return response()->json([
             'success' => true,
             'message' => 'Order dlm status diantar.',
@@ -384,6 +371,13 @@ class PorterController extends Controller
         // Ubah status menjadi finished
         $order->order_status_id = 3;
         $order->save();
+
+        $porter = Porter::find($order->porter_id);
+        if ($porter) {
+            $porter->isWorking = false;
+            $porter->porter_isOnline = true;
+            $porter->save();
+        }
 
         return response()->json([
             'success' => true,
@@ -505,7 +499,7 @@ class PorterController extends Controller
         ]);
     }
 
-      public function getToggleIsOpen($id)
+    public function getToggleIsOpen($id)
     {
         $porter = Porter::find($id);
 
