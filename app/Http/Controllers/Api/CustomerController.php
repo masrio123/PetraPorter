@@ -22,6 +22,7 @@ class CustomerController extends Controller
         try {
             $validated = $request->validate([
                 'customer_name' => 'required|string|max:255',
+                'identity_number'=>'required|string|max:255',
                 'department_id' => 'required|exists:departments,id',
                 'bank_user_id' => 'required|exists:bank_users,id',
             ]);
@@ -72,6 +73,7 @@ class CustomerController extends Controller
 
             $validated = $request->validate([
                 'customer_name' => 'required|string|max:255',
+                'identity_number'=>'required|string|max:255',
                 'department_id' => 'required|exists:departments,id',
                 'bank_user_id' => 'required|exists:bank_users,id',
             ]);
