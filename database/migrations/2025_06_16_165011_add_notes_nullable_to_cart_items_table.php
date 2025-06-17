@@ -6,13 +6,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /** 
+    /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::table('porters', function (Blueprint $table) {
-            $table->dateTime('timeout_until')->nullable()->after('department_id');
+        Schema::table('cart_items', function (Blueprint $table) {
+            $table->text('notes')->after('quantity')->nullable();
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('porters', function (Blueprint $table) {
-            $table->dropColumn('timeout_until');
+        Schema::table('cart_items', function (Blueprint $table) {
+            //
         });
     }
 };

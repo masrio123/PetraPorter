@@ -256,7 +256,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Seed Customers
+ // Seed Customers
         $customerNames = [
             'Daniel Simanjuntak',
             'Yuliana Sari',
@@ -271,18 +271,26 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($customerNames as $key => $name) {
+            // Create a new user for each customer
             $user = User::create([
                 'name' => $name,
                 'email' => 'customer' . $key . '@gmail.com',
                 'password' => Hash::make('customer123'),
             ]);
 
+            // Assign the "customer" role
             $user->assignRole("customer");
 
-            \App\Models\Customer::create([
+            // Generate an identity number with the pattern c1421xxxx
+            $randomDigits = str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
+            $identityNumber = 'c1421' . $randomDigits;
+
+            // Create the customer record with the new identity number
+            Customer::create([
                 'customer_name' => $name,
-                'department_id' => \App\Models\Department::inRandomOrder()->first()->id,
-                'bank_user_id' => \App\Models\BankUser::inRandomOrder()->first()->id,
+                'identity_number' => $identityNumber, // <-- Pola diubah di sini
+                'department_id' => Department::inRandomOrder()->first()->id,
+                'bank_user_id' => BankUser::inRandomOrder()->first()->id,
                 'user_id' => $user->id
             ]);
         }
@@ -325,58 +333,58 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Seed untuk dummy order
-        for ($i = 0; $i < 20; $i++) {
-            $customer = Customer::inRandomOrder()->first();
-            $tenant = Tenant::inRandomOrder()->first();
-            $products = Product::where('tenant_id', $tenant->id)->inRandomOrder()->take(rand(1, 3))->get();
-            $deliveryPoint = DeliveryPoint::inRandomOrder()->first();
+        // // Seed untuk dummy order
+        // for ($i = 0; $i < 20; $i++) {
+        //     $customer = Customer::inRandomOrder()->first();
+        //     $tenant = Tenant::inRandomOrder()->first();
+        //     $products = Product::where('tenant_id', $tenant->id)->inRandomOrder()->take(rand(1, 3))->get();
+        //     $deliveryPoint = DeliveryPoint::inRandomOrder()->first();
 
-            $shipping_cost = 10000;
-            $total_price = 0;
+        //     $shipping_cost = 10000;
+        //     $total_price = 0;
 
-            // Hitung total_price berdasarkan subtotal semua product
-            $productQtyMap = [];
-            foreach ($products as $product) {
-                $qty = rand(1, 3);
-                $total_price += $product->price * $qty;
-                $productQtyMap[] = ['product' => $product, 'qty' => $qty];
-            }
+        //     // Hitung total_price berdasarkan subtotal semua product
+        //     $productQtyMap = [];
+        //     foreach ($products as $product) {
+        //         $qty = rand(1, 3);
+        //         $total_price += $product->price * $qty;
+        //         $productQtyMap[] = ['product' => $product, 'qty' => $qty];
+        //     }
 
-            // Buat atau ambil cart berdasarkan kombinasi customer & tenant_location
-            $cart = Cart::firstOrCreate([
-                'customer_id' => $customer->id,
-                'tenant_location_id' => $tenant->tenant_location_id,
-                'delivery_point_id' => rand(1, 12)
-            ]);
+        //     // Buat atau ambil cart berdasarkan kombinasi customer & tenant_location
+        //     $cart = Cart::firstOrCreate([
+        //         'customer_id' => $customer->id,
+        //         'tenant_location_id' => $tenant->tenant_location_id,
+        //         'delivery_point_id' => rand(1, 12)
+        //     ]);
 
-            // Buat order
-            $order = Order::create([
-                'cart_id' => $cart->id,
-                'customer_id' => $customer->id,
-                'tenant_location_id' => $tenant->tenant_location_id,
-                'order_status_id' => DB::table('order_statuses')->inRandomOrder()->first()->id,
-                'total_price' => $total_price,
-                'shipping_cost' => $shipping_cost,
-                'grand_total' => $total_price + $shipping_cost,
-                'porter_id' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        //     // Buat order
+        //     $order = Order::create([
+        //         'cart_id' => $cart->id,
+        //         'customer_id' => $customer->id,
+        //         'tenant_location_id' => $tenant->tenant_location_id,
+        //         'order_status_id' => DB::table('order_statuses')->inRandomOrder()->first()->id,
+        //         'total_price' => $total_price,
+        //         'shipping_cost' => $shipping_cost,
+        //         'grand_total' => $total_price + $shipping_cost,
+        //         'porter_id' => 1,
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ]);
 
-            // Buat order item
-            foreach ($productQtyMap as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['product']->id,
-                    'tenant_id' => $tenant->id,
-                    'quantity' => $item['qty'],
-                    'price' => $item['product']->price,
-                    'subtotal' => $item['product']->price * $item['qty'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-        }
+        //     // Buat order item
+        //     foreach ($productQtyMap as $item) {
+        //         OrderItem::create([
+        //             'order_id' => $order->id,
+        //             'product_id' => $item['product']->id,
+        //             'tenant_id' => $tenant->id,
+        //             'quantity' => $item['qty'],
+        //             'price' => $item['product']->price,
+        //             'subtotal' => $item['product']->price * $item['qty'],
+        //             'created_at' => now(),
+        //             'updated_at' => now(),
+        //         ]);
+        //     }
+        // }
     }
 }

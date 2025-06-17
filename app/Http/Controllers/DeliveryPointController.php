@@ -26,7 +26,6 @@ class DeliveryPointController extends Controller
         $request->validate([
             'delivery_point_name' => 'required|string|max:255',
         ]);
-
         DeliveryPoint::create([
             'delivery_point_name' => $request->delivery_point_name,
         ]);
