@@ -13,7 +13,7 @@
 
             <div class="card shadow-sm">
                 <div class="card-body p-6">
-                    <form id="formAuthentication" action="" method="POST">
+                    <form id="formAuthentication" action="{{ route('login.post') }}" method="POST">
                         @csrf
                         <div class="mb-3">
                             <label for="email" class="form-label">User</label>

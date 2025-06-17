@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -16,6 +17,24 @@ class AuthController extends Controller
         ]);
     
     }
+
+     public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password], $request->has('remember'))) {
+
+            $user = Auth::user();
+
+            return to_route('dashboard.index')->with('success', 'Login Berhasil');
+        }
+
+        return redirect()->back()->with('error', 'Alamat Email atau Password Salah');
+    }
+
 
     /**
      * Show the form for creating a new resource.
