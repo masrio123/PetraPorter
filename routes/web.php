@@ -19,7 +19,7 @@ Route::group(['prefix' => 'auth'], function () {
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
-Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
+Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.', 'middleware' => ['auth'] ], function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
     Route::resource('/tenants', TenantController::class);
     Route::resource('/porters', controller: PorterController::class);
