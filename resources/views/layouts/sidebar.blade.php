@@ -7,7 +7,7 @@
         ['label' => 'Bank User', 'icons' => 'bx bx-money', 'route' => 'dashboard.bank-users.index'],
         ['label' => 'Aktivitas', 'icons' => 'bx bx-run', 'route' => 'dashboard.activity.activity'],
         ['type' => 'divider', 'label' => 'Lainnya'],
-        ['label' => 'Keluar', 'icons' => 'bx bx-left-arrow-alt', 'route' => null],
+        ['label' => 'Keluar', 'icons' => 'bx bx-left-arrow-alt', 'route' => 'logout'],
     ];
 @endphp
 
