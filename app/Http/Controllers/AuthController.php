@@ -92,6 +92,6 @@ class AuthController extends Controller
 
         $request->session()->regenerateToken();
 
-        return to_route('home')->with('success', 'Kamu berhasil keluar dari aplikasi');
+        return to_route('login')->with('success', 'Kamu berhasil keluar dari aplikasi');
     }
 }

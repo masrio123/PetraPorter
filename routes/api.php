@@ -20,13 +20,13 @@ use App\Http\Controllers\Api\TenantLocationController as ApiTenantLocationContro
 use App\Http\Controllers\Api\PorterController as ApiPorterController;
 
 
-// login
+
 Route::post('/login', [AuthController::class, 'login']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-    
+
     //Product
     Route::get('/products', [ApiProductController::class, 'fetchAllProducts']);
     Route::get('/products/{id}/tenants-products', [ApiProductController::class, 'getProductsByTenantLocation']);
@@ -89,7 +89,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Tenant Location
     Route::get('/tenant-locations', [ApiTenantLocationController::class, 'index']);
-    
+
     Route::get('/porters/{porterId}/orderList', [ApiPorterController::class, 'orderList']);
     Route::post('/porters/{orderId}/accept', [ApiPorterController::class, 'acceptOrder']);
     Route::post('/porters/{orderId}/reject', [ApiPorterController::class, 'rejectOrder']);
@@ -101,6 +101,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/porters/profile/{porterId}', [ApiPorterController::class, 'profileApi']);
     Route::post('/porter/{id}/toggle-is-open', [ApiPorterController::class, 'getToggleIsOpen']);
     Route::put('/porter/{id}/toggle-is-open', [ApiPorterController::class, 'UpdateToggleIsOpen']);
+
+    // di routes/api.php
+    Route::get('/orders/summary/finished', [ApiOrderController::class, 'getFinishedOrdersSummary']);
+    
 });
-
-

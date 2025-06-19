@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\DeliveryPoint;
+use App\Models\OrderStatus;
 use Illuminate\Http\Request;
+use App\Models\DeliveryPoint;
+use App\Http\Controllers\Controller;
 
 class OrderController extends Controller
 {
@@ -198,6 +199,47 @@ class OrderController extends Controller
             return response()->json(['success' => true, 'message' => 'List of orders for customer_id: ' . $customerId, 'data' => $formattedOrders]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Gagal mengambil data order customer.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getFinishedOrdersSummary()
+    {
+        try {
+            // 1. Dapatkan ID untuk status 'finished'
+            // Ganti 'status' dengan nama kolom Anda yang sebenarnya jika berbeda (misal: 'name')
+            $finishedStatus = OrderStatus::where('status', 'finished')->first();
+
+            // Jika status 'finished' tidak terdefinisi di database, kembalikan error.
+            if (!$finishedStatus) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Konfigurasi status "finished" tidak ditemukan.',
+                ], 500);
+            }
+
+            // 2. Lakukan query untuk menghitung order dan menjumlahkan shipping_cost
+            // Query ini hanya akan berjalan pada order yang memiliki order_status_id yang cocok.
+            $ordersQuery = Order::where('order_status_id', $finishedStatus->id);
+
+            $totalFinishedOrders = $ordersQuery->count();
+            $totalShippingCost = $ordersQuery->sum('shipping_cost');
+
+            // 3. Kembalikan data dalam format JSON
+            return response()->json([
+                'success' => true,
+                'message' => 'Summary of all finished orders.',
+                'data' => [
+                    'total_finished_orders' => $totalFinishedOrders,
+                    'total_shipping_income' => (int) $totalShippingCost,
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil summary order.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
     // ... (Fungsi-fungsi lain juga perlu diperiksa dan diberi optional() jika perlu)

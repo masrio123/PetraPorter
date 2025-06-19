@@ -459,39 +459,41 @@ class PorterController extends Controller
     }
 
     public function workSummary($porterId)
-    {
-        try {
-            // Ambil semua order yang memiliki porter_id sama
-            $orders = Order::where('porter_id', $porterId)->get();
+{
+    try {
+        // Ambil semua order yang memiliki porter_id sama dan status finished
+        $orders = Order::where('porter_id', $porterId)
+                      ->where('order_status_id', 3)
+                      ->get();
 
-            // Jika tidak ada order ditemukan
-            if ($orders->isEmpty()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No orders found for this porter.',
-                ], 404);
-            }
-
-            // Hitung total order dan total pendapatan dari shipping cost
-            $totalOrders = $orders->count();
-            $totalIncome = $orders->sum('shipping_cost');
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Summary of orders handled by porter_id: ' . $porterId,
-                'data' => [
-                    'total_orders_handled' => $totalOrders,
-                    'total_income' => $totalIncome,
-                ],
-            ]);
-        } catch (\Exception $e) {
+        // Jika tidak ada order ditemukan
+        if ($orders->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to calculate porter summary.',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'No finished orders found for this porter.',
+            ], 404);
         }
-    } // Di controller Laravel Anda
+
+        // Hitung total order dan total pendapatan dari shipping cost
+        $totalOrders = $orders->count();
+        $totalIncome = $orders->sum('shipping_cost');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Summary of finished orders handled by porter_id: ' . $porterId,
+            'data' => [
+                'total_orders_handled' => $totalOrders,
+                'total_income' => $totalIncome,
+            ],
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to calculate porter summary.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
     public function profileApi($id)
     {
         // Menggunakan try-catch adalah praktik yang baik jika findOrFail bisa gagal
