@@ -46,11 +46,11 @@ class PorterController extends Controller
                         'tenant_name' => optional($items->first()->tenant)->name,
                         'items' => $items->map(function ($item) {
                             return [
-                                'product_id' => $item->product_id,
-                                'product_name' => optional($item->product)->name,
+                                'product_name' => $item->product_name,
                                 'quantity' => $item->quantity,
                                 'price' => $item->price,
                                 'subtotal' => $item->price * $item->quantity,
+                                'notes' => $item->notes
                             ];
                         })->values(),
                     ];
@@ -130,8 +130,7 @@ class PorterController extends Controller
                 'tenant_name' => optional(optional($items->first()->product)->tenant)->name ?? '-',
                 'items' => $items->map(function ($item) {
                     return [
-                        'product_id' => $item->product_id,
-                        'product_name' => optional($item->product)->name,
+                        'product_name' => $item->product_name,
                         'quantity' => $item->quantity,
                         'price' => $item->price,
                         'subtotal' => $item->subtotal,
@@ -275,11 +274,11 @@ class PorterController extends Controller
                         'tenant_name' => optional($items->first()->tenant)->name,
                         'items' => $items->map(function ($item) {
                             return [
-                                'product_id' => $item->product_id,
-                                'product_name' => optional($item->product)->name,
+                                'product_name' => $item->product_name,
                                 'quantity' => $item->quantity,
                                 'price' => $item->price,
                                 'subtotal' => $item->price * $item->quantity,
+                                'notes' => $item->notes
                             ];
                         })->values(),
                     ];
@@ -420,11 +419,11 @@ class PorterController extends Controller
                         'tenant_name' => optional($items->first()->tenant)->name,
                         'items' => $items->map(function ($item) {
                             return [
-                                'product_id' => $item->product_id,
-                                'product_name' => $item->product->name,
+                                'product_name' => $item->product_name,
                                 'quantity' => $item->quantity,
                                 'price' => $item->price,
                                 'subtotal' => $item->subtotal,
+                                'notes' => $item->notes
                             ];
                         })->values(),
                     ];
@@ -492,20 +491,35 @@ class PorterController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }
+    } // Di controller Laravel Anda
     public function profileApi($id)
     {
-        $porter = Porter::with(['department', 'bankUser'])->findOrFail($id);
+        // Menggunakan try-catch adalah praktik yang baik jika findOrFail bisa gagal
+        try {
+            $porter = Porter::with(['department', 'bankUser'])->findOrFail($id);
 
-        return response()->json([
-            'porter_name' => $porter->porter_name,
-            'porter_nrp' => $porter->porter_nrp,
-            'department' => $porter->department?->department_name,
-            'account_number' => $porter->bankUser?->account_number,
-        ]);
+            // Bungkus respons dalam struktur yang diharapkan oleh Flutter
+            return response()->json([
+                'success' => true,
+                'message' => 'Profil porter berhasil diambil.',
+                'data'    => [
+                    'porter_name'    => $porter->porter_name,
+                    'porter_nrp'     => $porter->porter_nrp,
+                    'department'     => $porter->department?->department_name,
+                    'account_number' => $porter->bankUser?->account_number,
+                ]
+            ], 200); // Kode status OK
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data porter tidak ditemukan.',
+                'data'    => null
+            ], 404); // Kode status Not Found
+        }
     }
 
-      public function getToggleIsOpen($id)
+    public function getToggleIsOpen($id)
     {
         $porter = Porter::find($id);
 

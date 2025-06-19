@@ -11,92 +11,77 @@ use App\Http\Controllers\Controller;
 
 class CartItemController extends Controller
 {
-    public function addItems(Request $request)
+    // File: app/Http/Controllers/Api/CartItemController.php
+
+public function addItems(Request $request)
     {
         try {
-            $request->validate([
+            $validatedData = $request->validate([
                 'cart_id' => 'required|exists:carts,id',
                 'product_id' => 'required|exists:products,id',
                 'quantity' => 'required|integer|min:1',
             ]);
 
-            $cart = Cart::with('tenantLocation')->findOrFail($request->cart_id);
+            $cart = Cart::findOrFail($validatedData['cart_id']);
+            // Ambil data produk dari katalog berdasarkan product_id
+            $product = Product::findOrFail($validatedData['product_id']);
             
-            $product = Product::findOrFail($request->product_id);
-            $tenant = Tenant::where('id', $product->tenant_id)->first();
-            
-            // Cek apakah tenant berada di gedung yang sama
-            if ($tenant->tenant_location_id !== $cart->tenant_location_id) {
-                $allowedTenants = Tenant::where('tenant_location_id', $cart->tenant_location_id)
-                    ->select('id', 'name')
-                    ->get();
-
-                return response()->json([
-                    'message' => 'Tenant tidak berada di lokasi yang sama dengan cart.',
-                    'allowed_tenants' => $allowedTenants
-                ], 422);
+            // Cek lokasi tenant jika diperlukan
+            if ($product->tenant->tenant_location_id !== $cart->tenant_location_id) {
+                return response()->json(['message' => 'Tenant produk tidak berada di lokasi yang sama dengan keranjang Anda.'], 422);
             }
 
-            // ✅ Tambahkan atau update item
             $existingItem = CartItem::where('cart_id', $cart->id)
                 ->where('product_id', $product->id)
                 ->first();
 
             if ($existingItem) {
-                $existingItem->quantity += $request->quantity;
+                // Jika item sudah ada, cukup update kuantitasnya
+                $existingItem->quantity += $validatedData['quantity'];
                 $existingItem->save();
             } else {
+                // Jika item baru, buat entri baru di cart_items
+                // DAN SALIN NAMA & HARGA saat itu juga.
                 CartItem::create([
                     'cart_id' => $cart->id,
                     'product_id' => $product->id,
-                    'tenant_id' => $tenant->id,
-                    'quantity' => $request->quantity,
+                    'tenant_id' => $product->tenant_id,
+                    'quantity' => $validatedData['quantity'],
+                    'product_name' => $product->name, // <-- DATA DISALIN DI SINI
+                    'price' => $product->price,       // <-- DATA DISALIN DI SINI
                 ]);
             }
 
-            return response()->json([
-                'message' => 'Item berhasil ditambahkan ke cart.'
-            ], 201);
+            return response()->json(['message' => 'Item berhasil ditambahkan ke cart.'], 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'message' => 'Validasi gagal.',
-                'errors' => $e->errors()
-            ], 422);
+            return response()->json(['message' => 'Validasi gagal.', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Terjadi kesalahan.',
-                'error' => $e->getMessage()
-            ], 500);
+            return response()->json(['message' => 'Terjadi kesalahan saat menambah item.', 'error' => $e->getMessage()], 500);
         }
     }
 
-
+    /**
+     * Menghapus atau mengurangi kuantitas item dari keranjang.
+     */
     public function deleteByTenantAndProduct($tenantId, $productId)
     {
-        $item = CartItem::where('tenant_id', $tenantId)
-            ->where('product_id', $productId)
-            ->first();
+        try {
+            $item = CartItem::where('tenant_id', $tenantId)
+                ->where('product_id', $productId)
+                ->firstOrFail();
 
-        if (!$item) {
-            return response()->json([
-                'message' => 'Item not found in cart.'
-            ], 404);
-        }
-
-        if ($item->quantity > 1) {
-            $item->quantity -= 1;
-            $item->save();
-
-            return response()->json([
-                'message' => 'Item quantity decreased by 1.',
-                'item' => $item
-            ]);
-        } else {
-            $item->delete();
-
-            return response()->json([
-                'message' => 'Item removed from cart because quantity was 1.'
-            ]);
+            if ($item->quantity > 1) {
+                $item->quantity -= 1;
+                $item->save();
+                return response()->json(['message' => 'Kuantitas item dikurangi 1.', 'item' => $item]);
+            } else {
+                $item->delete();
+                return response()->json(['message' => 'Item dihapus dari keranjang karena kuantitas sisa 1.']);
+            }
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Item tidak ditemukan di keranjang.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal menghapus item.', 'error' => $e->getMessage()], 500);
         }
     }
 }

@@ -9,7 +9,8 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    // Tampilkan semua order
+
+        // Tampilkan semua order
     public function showAll()
     {
         try {
@@ -142,51 +143,42 @@ class OrderController extends Controller
             ], 500);
         }
     }
-
     public function getCustomerActivity($customerId)
     {
         try {
-            $orders = Order::with([
-                'items.product',
-                'items.tenant',
-                'status',
-                'customer',
-                'tenantLocation',
-                'porter.department',
-                'porter.bankUser'
-            ])->where('customer_id', $customerId)->get();
+            $orders = Order::with(['items.tenant', 'status', 'customer', 'tenantLocation', 'porter.department', 'porter.bankUser'])
+                ->where('customer_id', $customerId)->get();
 
             if ($orders->isEmpty()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No orders found for this customer.',
-                ], 404);
+                return response()->json(['success' => true, 'message' => 'No orders found for this customer.', 'data' => []]);
             }
 
             $formattedOrders = $orders->map(function ($order) {
                 $groupedItems = $order->items->groupBy('tenant_id')->map(function ($items, $tenantId) {
                     return [
                         'tenant_id' => (int) $tenantId,
-                        'tenant_name' => optional($items->first()->tenant)->name,
+                        'tenant_name' => optional($items->first()->tenant)->name ?? 'Tenant Dihapus',
                         'items' => $items->map(function ($item) {
                             return [
                                 'product_id' => $item->product_id,
-                                'product_name' => $item->product->name,
+                                'product_name' => $item->product_name,
                                 'quantity' => $item->quantity,
                                 'price' => $item->price,
                                 'subtotal' => $item->subtotal,
+                                'notes' => $item->notes,
                             ];
                         })->values(),
                     ];
                 })->values();
 
+                // --- PERBAIKAN DI SINI --- Menggunakan optional() untuk semua relasi
                 return [
                     'order_id' => $order->id,
                     'cart_id' => $order->cart_id,
-                    'customer_id' => $order->customer->id,
-                    'customer_name' => $order->customer->customer_name,
-                    'tenant_location_id' => $order->tenantLocation->id,
-                    'tenant_location_name' => $order->tenantLocation->location_name,
+                    'customer_id' => optional($order->customer)->id,
+                    'customer_name' => optional($order->customer)->customer_name,
+                    'tenant_location_id' => optional($order->tenantLocation)->id,
+                    'tenant_location_name' => optional($order->tenantLocation)->location_name,
                     'porter' => $order->porter ? [
                         'porter_id' => $order->porter->id,
                         'name' => $order->porter->porter_name,
@@ -194,7 +186,7 @@ class OrderController extends Controller
                         'department' => optional($order->porter->department)->department_name ?? '-',
                         'account_number' => optional($order->porter->bankUser)->account_number ?? '-',
                     ] : null,
-                    'order_status' => optional($order->status)->order_status,
+                    'order_status' => optional($order->status)->order_status ?? 'Unknown',
                     'order_date' => $order->created_at->format('Y-m-d H:i:s'),
                     'items' => $groupedItems,
                     'total_price' => $order->total_price,
@@ -203,17 +195,10 @@ class OrderController extends Controller
                 ];
             });
 
-            return response()->json([
-                'success' => true,
-                'message' => 'List of orders for customer_id: ' . $customerId,
-                'data' => $formattedOrders,
-            ]);
+            return response()->json(['success' => true, 'message' => 'List of orders for customer_id: ' . $customerId, 'data' => $formattedOrders]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data order customer.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Gagal mengambil data order customer.', 'error' => $e->getMessage()], 500);
         }
     }
+    // ... (Fungsi-fungsi lain juga perlu diperiksa dan diberi optional() jika perlu)
 }

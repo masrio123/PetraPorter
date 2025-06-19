@@ -4,73 +4,67 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Cart;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Porter;
+use App\Models\Product;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log; // --- PERUBAHAN --- Tambahkan ini
 
 class CartController extends Controller
 {
     public function createCart(Request $request)
     {
         try {
-            $request->validate([
+            $validatedData = $request->validate([
                 'customer_id' => 'required|exists:customers,id',
                 'tenant_location_id' => 'required|exists:tenant_locations,id',
-                'delivery_id' => 'required'
+                'delivery_id' => 'required|exists:delivery_points,id'
             ]);
 
-
             $cart = Cart::create([
-                'customer_id' => $request->customer_id,
-                'tenant_location_id' => $request->tenant_location_id,
-                'delivery_point_id' => $request->delivery_id
+                'customer_id' => $validatedData['customer_id'],
+                'tenant_location_id' => $validatedData['tenant_location_id'],
+                'delivery_point_id' => $validatedData['delivery_id']
             ]);
 
             return response()->json([
                 'message' => 'Cart created successfully.',
                 'cart' => $cart->only(['id', 'customer_id', 'tenant_location_id']),
             ], 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'message' => 'Validation error.',
-                'errors' => $e->errors()
-            ], 422);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Something went wrong.',
-                'error' => $e->getMessage()
-            ], 500);
+            return response()->json(['message' => 'Gagal membuat cart.', 'error' => $e->getMessage()], 500);
         }
     }
 
+    /**
+     * Menampilkan isi dari satu keranjang belanja.
+     */
     public function showCart($id)
     {
         try {
-            $cart = Cart::with(['items.product', 'items.tenant', 'tenantLocation'])->findOrFail($id);
+            $cart = Cart::with(['items.tenant', 'tenantLocation'])->findOrFail($id);
 
             if ($cart->items->isEmpty()) {
-                return response()->json([
-                    'message' => 'Tidak ada item dalam cart ini.'
-                ], 404);
+                return response()->json(['message' => 'Tidak ada item dalam cart ini.'], 404);
             }
 
             $itemsGrouped = $cart->items->groupBy('tenant_id');
             $cartItemsDisplay = [];
 
             foreach ($itemsGrouped as $tenantId => $items) {
-                $tenantName = $items->first()->tenant->name;
+                $tenantName = optional($items->first()->tenant)->name ?? 'Unknown Tenant';
                 $listItems = [];
 
                 foreach ($items as $item) {
                     $listItems[] = [
                         'product_id' => $item->product_id,
-                        'product_name' => $item->product->name,
+                        'product_name' => $item->product_name,
                         'tenant_id' => $item->tenant_id,
                         'quantity' => $item->quantity,
-                        'price' => $item->product->price,
-                        'subtotal' => $item->quantity * $item->product->price,
+                        'price' => $item->price,
+                        'subtotal' => $item->quantity * $item->price,
                     ];
                 }
 
@@ -81,7 +75,7 @@ class CartController extends Controller
                 ];
             }
 
-            $totalPrice = $cart->items->sum(fn($item) => $item->quantity * $item->product->price);
+            $totalPrice = $cart->items->sum(fn($item) => $item->quantity * $item->price);
             $totalQuantity = $cart->items->sum('quantity');
 
             $shippingCost = match (true) {
@@ -93,8 +87,8 @@ class CartController extends Controller
 
             return response()->json([
                 'cart_id' => $cart->id,
-                'customer_id' => $cart->customer_id ?? null,
-                'tenant_location' => $cart->tenantLocation->location_name ?? null,
+                'customer_id' => $cart->customer_id,
+                'tenant_location' => optional($cart->tenantLocation)->location_name,
                 'cart_items' => $cartItemsDisplay,
                 'total_payment' => [
                     'total_price' => $totalPrice,
@@ -102,85 +96,108 @@ class CartController extends Controller
                     'grand_total' => $totalPrice + $shippingCost,
                 ],
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['message' => 'Cart tidak ditemukan.'], 404);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Terjadi kesalahan saat mengambil data cart.', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Gagal mengambil data cart.', 'error' => $e->getMessage()], 500);
         }
     }
 
-    public function checkoutCart($id)
+    /**
+     * Memproses checkout: memindahkan data dari cart_items ke order_items.
+     */
+    public function checkoutCart(Request $request, $id)
     {
+        $validatedData = $request->validate([
+            'notes' => 'nullable|array',
+            'notes.*.product_id' => 'required_with:notes|integer',
+            'notes.*.note' => 'nullable|string',
+        ]);
+
         try {
-            $cart = Cart::with(['items.product', 'tenantLocation'])->findOrFail($id);
+            $order = DB::transaction(function () use ($id, $validatedData) {
+                $cart = Cart::with('items')->findOrFail($id);
 
-            if ($cart->items->isEmpty()) {
-                return response()->json(['message' => 'Cart is empty, cannot checkout.'], 400);
-            }
+                if ($cart->items->isEmpty()) {
+                    throw new \Exception('Cart is empty.');
+                }
 
-            $totalPrice = $cart->items->sum(fn($item) => $item->quantity * $item->product->price);
-            $totalQuantity = $cart->items->sum('quantity');
+                $totalPrice = 0;
+                $totalQuantity = $cart->items->sum('quantity');
 
-            $shippingCost = match (true) {
-                $totalQuantity <= 2 => 2000,
-                $totalQuantity <= 4 => 5000,
-                $totalQuantity <= 10 => 10000,
-                default => 10000 + (ceil($totalQuantity - 10) * 10000),
-            };
+                $shippingCost = match (true) {
+                    $totalQuantity <= 2 => 2000,
+                    $totalQuantity <= 4 => 5000,
+                    $totalQuantity <= 10 => 10000,
+                    default => 10000 + (ceil($totalQuantity - 10) * 10000),
+                };
 
-            $grandTotal = $totalPrice + $shippingCost;
+                $porter = Porter::where('porter_isOnline', true)
+                    ->where(fn($q) => $q->whereNull('timeout_until')->orWhere('timeout_until', '<=', now()))
+                    ->inRandomOrder()->first();
 
-            $porter = Porter::with('department', 'bankUser')->inRandomOrder()->first();
+                if (!$porter) throw new \Exception('No porter available.');
 
-            if (!$porter) {
-                return response()->json(['message' => 'No porter available.'], 500);
-            }
-
-            // --- PERBAIKAN DI SINI ---
-            // Gunakan DB::transaction untuk mendapatkan hasil return dari dalamnya.
-            $order = DB::transaction(function () use ($cart, $totalPrice, $shippingCost, $grandTotal) {
                 $createdOrder = Order::create([
                     'cart_id' => $cart->id,
                     'customer_id' => $cart->customer_id,
+                    'delivery_point_id' => $cart->delivery_point_id,
+                    'porter_id' => $porter->id,
                     'tenant_location_id' => $cart->tenant_location_id,
-                    'order_status_id' => 5, // pending
-                    'total_price' => $totalPrice,
+                    'order_status_id' => 5,
+                    'total_price' => 0,
                     'shipping_cost' => $shippingCost,
-                    'grand_total' => $grandTotal,
+                    'grand_total' => 0,
                 ]);
 
+                $notesMap = collect($validatedData['notes'] ?? [])->pluck('note', 'product_id');
+
+                $finalTotalPrice = 0;
+
                 foreach ($cart->items as $item) {
+                    $productName = $item->product_name;
+                    $productPrice = $item->price;
+
+                    if (empty($productName) || is_null($productPrice)) {
+                        $freshProduct = Product::find($item->product_id);
+                        if ($freshProduct) {
+                            $productName = $freshProduct->name;
+                            $productPrice = $freshProduct->price;
+                        } else {
+                            $productName = 'Produk Dihapus';
+                            $productPrice = 0;
+                        }
+                    }
+
+                    $subtotal = $item->quantity * $productPrice;
+                    $finalTotalPrice += $subtotal;
+
                     OrderItem::create([
                         'order_id' => $createdOrder->id,
                         'product_id' => $item->product_id,
                         'tenant_id' => $item->tenant_id,
                         'quantity' => $item->quantity,
-                        'price' => $item->product->price,
-                        'subtotal' => $item->quantity * $item->product->price,
+                        'product_name' => $productName,
+                        'price' => $productPrice,
+                        'subtotal' => $subtotal,
+                        'notes' => $notesMap[$item->product_id] ?? null,
                     ]);
                 }
 
-                $cart->update(['order_status_id' => 1]);
-                $cart->items()->delete();
+                $createdOrder->total_price = $finalTotalPrice;
+                $createdOrder->grand_total = $finalTotalPrice + $shippingCost;
+                $createdOrder->save();
 
-                // Kembalikan order yang baru dibuat dari dalam transaksi
+                $cart->items()->delete(); // Hapus item-itemnya saja
+                // $cart->delete();      // <-- BARIS INI DIHAPUS/DIKOMENTARI
+
                 return $createdOrder;
             });
 
-            // Sekarang $order berisi objek yang baru dibuat dan bisa dikirim kembali.
-            return response()->json([
-                'message' => 'Checkout berhasil, order telah dibuat.',
-                'order' => $order // Kirim objek order ke frontend
-            ]);
-            // --- AKHIR PERBAIKAN ---
-
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['message' => 'Cart tidak ditemukan.'], 404);
+            return response()->json(['message' => 'Checkout berhasil, order telah dibuat.', 'order' => $order]);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Checkout gagal.', 'error' => $e->getMessage()], 500);
+            Log::error('Checkout Failed:', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Checkout Gagal: ' . $e->getMessage()], 500);
         }
     }
-
     public function getAllCarts()
     {
         try {
@@ -203,7 +220,7 @@ class CartController extends Controller
                     foreach ($items as $item) {
                         $listItems[] = [
                             'product_id' => $item->product_id,
-                            'product_name' => $item->product->name ?? '-',
+                            'product_name' => $item->product_name ?? '-',
                             'tenant_id' => $item->tenant_id,
                             'quantity' => $item->quantity,
                             'price' => $item->product->price ?? 0,
@@ -261,10 +278,7 @@ class CartController extends Controller
         try {
             $cart = Cart::with('items')->findOrFail($id);
 
-            // Hapus semua item dalam cart terlebih dahulu
             $cart->items()->delete();
-
-            // Hapus cart-nya
             $cart->delete();
 
             return response()->json([

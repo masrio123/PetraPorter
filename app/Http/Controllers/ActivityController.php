@@ -38,6 +38,7 @@ class ActivityController extends Controller
                             'quantity' => $item->quantity,
                             'price' => $item->price,
                             'subtotal' => $item->subtotal,
+                            'notes' => $item->notes,
                         ];
                     })->values(),
                 ];

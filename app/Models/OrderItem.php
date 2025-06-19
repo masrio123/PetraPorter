@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderItem extends Model
 {
-    protected $fillable = [
+   protected $fillable = [
         'order_id',
-        'product_id',
         'tenant_id',
         'quantity',
+        'product_name', // <-- INI YANG PALING PENTING
         'price',
         'subtotal',
+        'notes',
     ];
 
     // Relasi ke Product
