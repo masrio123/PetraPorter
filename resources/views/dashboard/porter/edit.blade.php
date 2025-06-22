@@ -53,14 +53,10 @@
                 <div class="mb-3">
                     <label for="department_id" class="form-label">Departemen</label>
                     <select name="department_id" id="department_id"
-                        class="form-select @error('department_id') is-invalid animate__animated animate__shakeX @enderror"
-                        required>
-                        <option disabled {{ empty(old('department_id', $porter->department_id ?? null)) ? 'selected' : '' }}>
-                            -- Pilih Departemen --
-                        </option>
+                        class="form-select @error('department_id') is-invalid animate__animated animate__shakeX @enderror">
+                        <option value="">-- Pilih Departemen --</option>
                         @foreach ($departments as $department)
-                            <option value="{{ $department->id }}"
-                                {{ (int) old('department_id', $porter->department_id) === $department->id ? 'selected' : '' }}>
+                            <option value="{{ $department->id }}" {{ old('department_id', $porter->department_id) == $department->id ? 'selected' : '' }}>
                                 {{ $department->department_name }}
                             </option>
                         @endforeach
@@ -70,24 +66,43 @@
                     @enderror
                 </div>
 
-                <div class="mb-3">
-                    <label for="bank_user_id" class="form-label">Rekening Porter</label>
-                    <select name="bank_user_id" id="bank_user_id"
-                        class="form-select @error('bank_user_id') is-invalid animate__animated animate__shakeX @enderror"
-                        required>
-                        <option disabled {{ empty(old('bank_user_id', $porter->bank_user_id ?? null)) ? 'selected' : '' }}>
-                            -- Pilih Rekening --
-                        </option>
-                        @foreach ($bankUsers as $bankUser)
-                            <option value="{{ $bankUser->id }}"
-                                {{ (int) old('bank_user_id', $porter->bank_user_id) === $bankUser->id ? 'selected' : '' }}>
-                                {{ $bankUser->account_number }} – {{ $bankUser->bank->bank_name ?? 'Bank Tidak Diketahui' }} – {{ $bankUser->username }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('bank_user_id')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                {{-- Kolom untuk info rekening bank --}}
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="bank_name" class="form-label">Nama Bank</label>
+                        <select name="bank_name" id="bank_name"
+                            class="form-select @error('bank_name') is-invalid animate__animated animate__shakeX @enderror" required>
+                            <option value="">-- Pilih Bank --</option>
+                            @php
+                                $banks = ['BCA', 'Mandiri', 'BNI', 'BRI', 'CIMB Niaga', 'Danamon', 'PermataBank', 'OCBC NISP', 'Panin Bank', 'BTN'];
+                                sort($banks);
+                            @endphp
+                            @foreach ($banks as $bank)
+                                <option value="{{ $bank }}" {{ old('bank_name', $porter->bank_name) == $bank ? 'selected' : '' }}>{{ $bank }}</option>
+                            @endforeach
+                        </select>
+                        @error('bank_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="account_numbers" class="form-label">Nomor Rekening</label>
+                        <input type="text" name="account_numbers" id="account_numbers"
+                            class="form-control @error('account_numbers') is-invalid animate__animated animate__shakeX @enderror"
+                            required value="{{ old('account_numbers', $porter->account_numbers) }}">
+                        @error('account_numbers')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="username" class="form-label">a.n. Pemilik Rekening</label>
+                        <input type="text" name="username" id="username"
+                            class="form-control @error('username') is-invalid animate__animated animate__shakeX @enderror"
+                            required value="{{ old('username', $porter->username) }}">
+                        @error('username')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -108,37 +123,4 @@
         </div>
     </div>
 </div>
-
-@if (session()->has('success'))
-    <div class="modal fade show" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-modal="true"
-        style="display: block; background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-success">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="successModalLabel">Berhasil</h5>
-                    <a href="{{ url()->current() }}" class="btn-close"></a>
-                </div>
-                <div class="modal-body">
-                    {{ session('success') }}
-                </div>
-                <div class="modal-footer">
-                    <a href="{{ url()->current() }}" class="btn btn-success">Tutup</a>
-                </div>
-            </div>
-        </div>
-    </div>
-@endif
-
-{{-- Modal animasi buka tutup buku full layar abu2 --}}
-<div class="modal fade" id="bookModal" tabindex="-1" aria-hidden="true" style="background-color: #d9d9d9;">
-  <div class="modal-dialog modal-dialog-centered justify-content-center" style="max-width: 160px;">
-    <div class="modal-content border-0 bg-transparent shadow-none">
-      <div class="modal-body d-flex justify-content-center align-items-center p-0">
-        <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" id="bookLogo" style="width: 160px; height: auto; backface-visibility: hidden;">
-      </div>
-    </div>
-  </div>
-</div>
-
-
 @endsection

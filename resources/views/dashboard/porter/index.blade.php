@@ -1,218 +1,178 @@
 @extends('layouts.app')
 
-@section('content')
-    <div class="container">
-        <h3 class="mb-4"><strong>Porter Management</strong></h3>
+@section('title', 'Manajemen Porter')
 
-        <div class="mb-4">
-            <a href="{{ route('dashboard.porters.create') }}" class="btn text-white" style="background-color: #ff7622;">
+@section('content')
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex gap-2">
+            {{-- Fitur Pencarian --}}
+            <form action="{{ route('dashboard.porters.index') }}" method="GET" class="d-flex">
+                <input type="text" name="search" class="form-control" placeholder="Cari Porter" value="{{ request('search') }}">
+                <button type="submit" class="btn btn-dark ms-2"><i class="bx bx-search"></i></button>
+                @if (request('search'))
+                    <a href="{{ route('dashboard.porters.index') }}" class="btn btn-outline-secondary ms-2">Reset</a>
+                @endif
+            </form>
+            {{-- Tombol Tambah Porter --}}
+            <a href="{{ route('dashboard.porters.create') }}" class="btn text-white" style="background-color: #ff7622; border-color: #ff7622;">
+                <i class="bx bx-plus me-1"></i>
                 Tambah Porter
             </a>
         </div>
+    </div>
 
-        {{-- Alert sukses --}}
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-                <i class="fas fa-check-circle fa-lg"></i>
-                <div>{{ session('success') }}</div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
+    {{-- Alert sukses --}}
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
+            <i class="bx bx-check-circle me-2"></i>
+            <div>{{ session('success') }}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
-        <div class="card card-body shadow-sm overflow-auto">
-            <table class="table table-bordered table-hover align-middle">
-                <thead class="text-center table-light">
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover align-middle">
+                <thead>
                     <tr>
-                        <th>No</th>
-                        <th>Nama Porter</th>
-                        <th>NRP</th>
-                        <th>Jurusan</th>
-                        <th>No. Rekening</th>
-                        <th>Rating</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
+                        <th class="text-center">No</th>
+                        <th class="text-center">Nama Porter</th>
+                        <th class="text-center">NRP</th>
+                        <th class="text-center">Jurusan</th>
+                        <th class="text-center">Bank</th>
+                        <th class="text-center">No. Rekening</th>
+                        <th class="text-center">A.N</th>
+                        <th class="text-center">Rating</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="table-border-bottom-0">
                     @forelse ($porters as $key => $porter)
                         <tr>
+                            {{-- DIKEMBALIKAN: Menggunakan logika penomoran awal --}}
                             <td class="text-center">{{ $key + 1 }}</td>
-                            <td class="text-center">{{ $porter->porter_name }}</td>
+                            <td><strong>{{ $porter->porter_name }}</strong></td>
                             <td class="text-center">{{ $porter->porter_nrp }}</td>
-                            <td class="text-center">{{ $porter->department->department_name ?? '-' }}</td>
-                            <td class="text-center">{{ $porter->bankUser->account_number ?? '-' }}</td>
-                            <td class="text-center">{{ $porter->porter_rating ?? '-' }}</td>
+                            <td>{{ $porter->department->department_name ?? '-' }}</td>
+                            <td>{{ $porter->bank_name ?? '-' }}</td>
+                            <td>{{ $porter->account_numbers ?? '-' }}</td>
+                            <td>{{ $porter->username ?? '-' }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-label-warning d-inline-flex align-items-center">
+                                    {{-- PERBAIKAN: Menambahkan casting (float) untuk memastikan tipe data adalah angka --}}
+                                    <i class="bx bxs-star me-1"></i> {{ number_format((float)($porter->porter_rating ?? 0), 1) }}
+                                </span>
+                            </td>
                             <td class="text-center">
                                 @if ($porter->timeout_until && \Carbon\Carbon::parse($porter->timeout_until)->isFuture())
-                                    <span class="d-inline-flex align-items-center gap-2 text-warning fw-semibold">
-                                        <i class="fas fa-clock me-1"></i> Timeout sampai
-                                        {{ \Carbon\Carbon::parse($porter->timeout_until)->translatedFormat('d M Y H:i') }}
-                                    </span>
-                                @elseif ($porter->porter_isOnline)
-                                    <span class="d-inline-flex align-items-center gap-2 text-success fw-semibold">
-                                        <span class="rounded-circle"
-                                            style="width: 10px; height: 10px; background-color: #28a745;"></span>
-                                        Online
-                                    </span>
+                                    <span class="badge bg-label-danger">Timeout</span>
                                 @elseif ($porter->isWorking)
-                                    <div
-                                        class="mt-1 d-flex align-items-center justify-content-center gap-2 text-primary fw-semibold">
-                                        <i class="fas fa-briefcase"></i> Working
-                                    </div>
+                                     <span class="badge bg-label-info">Bekerja</span>
+                                @elseif ($porter->porter_isOnline)
+                                    <span class="badge bg-label-success">Online</span>
                                 @else
-                                    <span class="d-inline-flex align-items-center gap-2 text-danger fw-semibold">
-                                        <span class="rounded-circle"
-                                            style="width: 10px; height: 10px; background-color: #dc3545;"></span>
-                                        Offline
-                                    </span>
+                                    <span class="badge bg-label-secondary">Offline</span>
                                 @endif
                             </td>
                             <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
+                                <div class="d-inline-flex gap-2">
                                     {{-- Tombol Timeout atau Cabut Timeout --}}
                                     @if ($porter->timeout_until && \Carbon\Carbon::parse($porter->timeout_until)->isFuture())
-                                        <button type="button"
-                                            class="btn text-white d-flex align-items-center justify-content-center px-3 py-3"
-                                            style="height: 32px; background-color: #6c757d;" data-bs-toggle="modal"
-                                            data-bs-target="#cancelTimeoutModal{{ $porter->id }}"
-                                            @if ($porter->isWorking) disabled style="opacity: 0.65; pointer-events: none;" @endif>
-                                            <i class="fas fa-times-circle me-1" style="font-size: 0.85rem;"></i>
-                                            <span style="font-size: 0.85rem;">Free</span>
+                                        <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal"
+                                            data-bs-target="#cancelTimeoutModal{{ $porter->id }}" title="Cabut Timeout"
+                                            @if ($porter->isWorking) disabled @endif>
+                                            <i class="bx bx-play"></i>
                                         </button>
-
-                                        {{-- Modal Cabut Timeout --}}
-                                        <div class="modal fade" id="cancelTimeoutModal{{ $porter->id }}" tabindex="-1"
-                                            aria-labelledby="cancelTimeoutLabel{{ $porter->id }}" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content shadow-lg rounded-4 border-0">
-                                                    <div class="modal-body text-center p-4">
-                                                        <div class="mb-3">
-                                                            <i class="fas fa-clock fa-3x text-warning"></i>
-                                                        </div>
-                                                        <h5 class="fw-bold mb-3">Cabut Timeout Porter</h5>
-                                                        <p class="mb-4">
-                                                            Apakah Anda yakin ingin mencabut timeout porter <br>
-                                                            <strong>{{ $porter->porter_name }}</strong>? <br>
-                                                            Porter akan langsung bisa online kembali.
-                                                        </p>
-                                                        <div class="d-flex justify-content-center gap-3">
-                                                            <button type="button"
-                                                                class="btn btn-outline-secondary px-4 rounded-pill"
-                                                                data-bs-dismiss="modal">Batal</button>
-                                                            <form
-                                                                action="{{ route('dashboard.porters.update', $porter->id) }}"
-                                                                method="POST" class="d-inline">
-                                                                @csrf
-                                                                @method('PUT')
-                                                                <input type="hidden" name="action" value="cancel_timeout">
-                                                                <button type="submit"
-                                                                    class="btn btn-warning px-4 rounded-pill">Cabut
-                                                                    Timeout</button>
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
                                     @else
-                                        <button type="button"
-                                            class="btn text-white d-flex align-items-center justify-content-center px-3 py-3"
-                                            style="height: 32px; background-color: orange;" data-bs-toggle="modal"
-                                            data-bs-target="#timeoutModal{{ $porter->id }}"
-                                            @if ($porter->isWorking) disabled style="opacity: 0.65; pointer-events: none;" @endif>
-                                            <i class="fas fa-clock me-1" style="font-size: 0.85rem;"></i>
-                                            <span style="font-size: 0.85rem;">Timeout</span>
+                                        <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
+                                            data-bs-target="#timeoutModal{{ $porter->id }}" title="Beri Timeout"
+                                            @if ($porter->isWorking) disabled @endif>
+                                            <i class="bx bx-pause"></i>
                                         </button>
-
-                                        {{-- Modal Timeout --}}
-                                        <div class="modal fade" id="timeoutModal{{ $porter->id }}" tabindex="-1"
-                                            aria-labelledby="timeoutLabel{{ $porter->id }}" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content shadow-lg rounded-4 border-0">
-                                                    <div class="modal-body text-center p-4">
-                                                        <div class="mb-3">
-                                                            <i class="fas fa-clock fa-3x text-warning"></i>
-                                                        </div>
-                                                        <h5 class="fw-bold mb-3">Timeout Porter</h5>
-                                                        <p class="mb-4">
-                                                            Apakah Anda yakin ingin memberikan timeout selama 2 hari kepada
-                                                            porter
-                                                            <br>
-                                                            <strong>{{ $porter->porter_name }}</strong>?
-                                                        </p>
-                                                        <div class="d-flex justify-content-center gap-3">
-                                                            <button type="button"
-                                                                class="btn btn-outline-secondary px-4 rounded-pill"
-                                                                data-bs-dismiss="modal">Batal</button>
-                                                            <form
-                                                                action="{{ route('dashboard.porters.update', $porter->id) }}"
-                                                                method="POST" class="d-inline">
-                                                                @csrf
-                                                                @method('PUT')
-                                                                <input type="hidden" name="action" value="timeout">
-                                                                <button type="submit"
-                                                                    class="btn btn-warning px-4 rounded-pill">Timeout</button>
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
                                     @endif
-
-                                    <a href="{{ route('dashboard.porters.edit', $porter->id) }}"
-                                        class="btn btn-primary d-flex align-items-center justify-content-center px-3 py-3"
-                                        style="height: 32px; 
-        @if ($porter->isWorking) pointer-events: none; 
-            opacity: 0.65; 
-            cursor: default; @endif"
-                                        tabindex="{{ $porter->isWorking ? '-1' : '0' }}"
-                                        aria-disabled="{{ $porter->isWorking ? 'true' : 'false' }}">
-                                        <i class="fas fa-edit me-1" style="font-size: 0.85rem;"></i>
-                                        <span style="font-size: 0.85rem;">Edit</span>
+                                    
+                                    {{-- Edit --}}
+                                    <a href="{{ route('dashboard.porters.edit', $porter->id) }}" class="btn btn-sm btn-outline-primary @if ($porter->isWorking) disabled @endif" title="Edit Porter">
+                                        <i class="bx bx-pencil"></i>
                                     </a>
 
-
-
-                                    {{-- Tombol Hapus --}}
-                                    <button type="button"
-                                        class="btn text-white d-flex align-items-center justify-content-center px-3 py-3"
-                                        style="height: 32px; background-color: red;" data-bs-toggle="modal"
-                                        data-bs-target="#deleteModal{{ $porter->id }}"
-                                        @if ($porter->isWorking) disabled style="opacity: 0.65; pointer-events: none;" @endif>
-                                        <i class="fas fa-trash me-1" style="font-size: 0.85rem;"></i>
-                                        <span style="font-size: 0.85rem;">Hapus</span>
+                                    {{-- Hapus --}}
+                                    <button type="button" class="btn btn-sm btn-outline-danger @if ($porter->isWorking) disabled @endif" data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal{{ $porter->id }}" title="Hapus Porter">
+                                        <i class="bx bx-trash"></i>
                                     </button>
                                 </div>
                             </td>
                         </tr>
 
                         {{-- Modal Hapus --}}
-                        <div class="modal fade" id="deleteModal{{ $porter->id }}" tabindex="-1"
-                            aria-labelledby="deleteModalLabel{{ $porter->id }}" aria-hidden="true">
+                        <div class="modal fade" id="deleteModal{{ $porter->id }}" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content shadow-lg rounded-4 border-0">
-                                    <div class="modal-body text-center p-4">
-                                        <div class="mb-3">
-                                            <i class="fas fa-triangle-exclamation fa-3x text-danger"></i>
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Konfirmasi Hapus</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Apakah Anda yakin ingin menghapus porter <strong>{{ $porter->porter_name }}</strong>? <br> Tindakan ini tidak dapat dibatalkan.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                        <form action="{{ route('dashboard.porters.destroy', $porter->id) }}" method="POST">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-danger">Ya, Hapus</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Modal Timeout --}}
+                        <div class="modal fade" id="timeoutModal{{ $porter->id }}" tabindex="-1" aria-hidden="true">
+                             <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <form action="{{ route('dashboard.porters.update', $porter->id) }}" method="POST">
+                                        @csrf @method('PUT')
+                                        <input type="hidden" name="action" value="timeout">
+                                        {{-- PERUBAHAN: Menambahkan input tersembunyi untuk durasi timeout 2 hari --}}
+                                        <input type="hidden" name="timeout_duration" value="2">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Timeout Porter: {{ $porter->porter_name }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
-                                        <h5 class="fw-bold mb-3">Hapus Porter</h5>
-                                        <p class="mb-4">
-                                            Apakah Anda yakin ingin menghapus porter <br>
-                                            <strong>{{ $porter->porter_name }}</strong>? <br>
-                                            Tindakan ini tidak dapat dibatalkan.
-                                        </p>
-                                        <div class="d-flex justify-content-center gap-3">
-                                            <button type="button" class="btn btn-outline-secondary px-4 rounded-pill"
-                                                data-bs-dismiss="modal">Batal</button>
-                                            <form action="{{ route('dashboard.porters.destroy', $porter->id) }}"
-                                                method="POST" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                    class="btn btn-danger px-4 rounded-pill">Hapus</button>
-                                            </form>
+                                        <div class="modal-body">
+                                            {{-- PERUBAHAN: Menghapus pilihan durasi dan mengubah teks --}}
+                                            <p>Apakah Anda yakin ingin memberikan timeout selama 2 hari kepada <br> porter <strong>{{ $porter->porter_name }}</strong>? <br> <br> Yang bersangkutan tidak akan bisa online sampai durasi berakhir.</p>
                                         </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                            <button type="submit" class="btn btn-warning">Ya, Terapkan Timeout</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {{-- Modal Cabut Timeout --}}
+                        <div class="modal fade" id="cancelTimeoutModal{{ $porter->id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Konfirmasi Cabut Timeout</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Apakah Anda yakin ingin mencabut status timeout dari <strong>{{ $porter->porter_name }}</strong>? Porter akan dapat online kembali.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                        <form action="{{ route('dashboard.porters.update', $porter->id) }}" method="POST">
+                                            @csrf @method('PUT')
+                                            <input type="hidden" name="action" value="cancel_timeout">
+                                            <button type="submit" class="btn btn-success">Ya, Cabut Timeout</button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -220,14 +180,29 @@
 
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-4">
-                                <i class="fas fa-user-slash fa-lg mb-2 d-block"></i>
-                                Tidak ada data porter yang tersedia.
+                            <td colspan="7" class="text-center py-4">
+                                <i class="bx bx-user-x fs-1 d-block mb-2 text-muted"></i>
+                                <h5 class="text-muted">
+                                     @if (request('search'))
+                                        Porter "{{ request('search') }}" tidak ditemukan.
+                                     @else
+                                        Belum Ada Data Porter
+                                     @endif
+                                </h5>
+                                <p class="text-muted">
+                                    @if (request('search'))
+                                        Coba kata kunci lain atau reset pencarian.
+                                    @else
+                                        Silakan tambahkan data baru untuk memulai.
+                                    @endif
+                                </p>
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+        {{-- DIHAPUS: Menghapus logika paginasi yang salah --}}
     </div>
+</div>
 @endsection

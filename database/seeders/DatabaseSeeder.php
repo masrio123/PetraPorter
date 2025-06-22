@@ -9,13 +9,10 @@ use App\Models\Order;
 use App\Models\Porter;
 use App\Models\Tenant;
 use App\Models\Product;
-use App\Models\BankUser;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\OrderItem;
 use App\Models\Department;
-use App\Models\OrderDetail;
-use App\Models\OrderHistory;
 use App\Models\DeliveryPoint;
 use App\Models\TenantLocation;
 use Illuminate\Database\Seeder;
@@ -175,31 +172,16 @@ class DatabaseSeeder extends Seeder
         // Seed Departments
         $departments = [
             'Informatika',
-            'Sistem Informasi',
-            'Teknik Sipil',
-            'Arsitektur',
-            'Manajemen',
-            'Akuntansi',
-            'Desain Komunikasi Visual',
-            'Ilmu Komunikasi',
-            'Sastra Inggris',
-            'Hukum',
-            'Teknik Elektro',
-            'Teknik Mesin',
-            'Teknik Industri',
-            'Psikologi',
-            'Pendidikan Bahasa Inggris',
-            'Bioteknologi',
-            'Matematika',
-            'Statistika',
-            'Kedokteran',
-            'Farmasi'
+            'SIB', // Sistem Informasi Bisnis
+            'DSA', // Data Science and Analytics
         ];
         foreach ($departments as $dept) {
-            Department::create([
-                'department_name' => $dept
-            ]);
+            Department::create(['department_name' => $dept]);
         }
+
+        // Data Bank
+        $banks = ['BCA', 'Mandiri', 'BNI', 'BRI', 'CIMB Niaga', 'Danamon', 'PermataBank', 'OCBC NISP', 'Panin Bank', 'BTN'];
+
 
         // Seed Delivery Points
         $deliveryPoints = [
@@ -222,107 +204,84 @@ class DatabaseSeeder extends Seeder
                 'delivery_point_name' => $point,
             ]);
         }
+        $nrpCounter = 1;
 
-        // Seed Banks
-        $banks = [
-            'Bank Central Asia (BCA)',
-            'Bank Mandiri',
-            'Bank Rakyat Indonesia (BRI)',
-            'Bank Negara Indonesia (BNI)',
-            'Bank Syariah Indonesia (BSI)'
-        ];
-        foreach ($banks as $bankName) {
-            Bank::create(['bank_name' => $bankName]);
-        }
-        // Seed Bank Users
-        $bankUsers = [
-            ['username' => 'Andi Wijaya',     'account_number' => '1234567890'],
-            ['username' => 'Siti Nurhaliza',  'account_number' => '2345678901'],
-            ['username' => 'Budi Santoso',    'account_number' => '3456789012'],
-            ['username' => 'Dewi Lestari',    'account_number' => '4567890123'],
-            ['username' => 'Agus Prabowo',    'account_number' => '5678901234'],
-            ['username' => 'Rina Marlina',    'account_number' => '6789012345'],
-            ['username' => 'Tono Suhendra',   'account_number' => '7890123456'],
-            ['username' => 'Wulan Ayu',       'account_number' => '8901234567'],
-            ['username' => 'Fajar Nugroho',   'account_number' => '9012345678'],
-            ['username' => 'Melati Putri',    'account_number' => '0123456789'],
-        ];
-
-        foreach ($bankUsers as $user) {
-            BankUser::create([
-                'username' => $user['username'],
-                'account_number' => $user['account_number'],
-                'bank_id' => Bank::inRandomOrder()->first()->id,
-            ]);
-        }
-
- // Seed Customers
+        // 3. Seed Customers
         $customerNames = [
-            'Daniel Simanjuntak',
-            'Yuliana Sari',
-            'Rendy Mahardika',
-            'Clara Wibowo',
-            'Iman Firmansyah',
-            'Tania Lestari',
-            'Hendrik Gunawan',
-            'Maria Kristina',
-            'Alvin Nugroho',
-            'Vania Yosephine',
+            'Reyhan Renjiro Lauwrens',
+            'Gabrielle Abraham',
+            'Theodore Eldwin',
+            'Ignatius Jonathan',
+            'Satriya Handha',
+            'Jane Iolana',
+            'Calvin Wijaya',
+            'Samantha Chen',
+            'Stanley Hadikusuma',
         ];
 
-        foreach ($customerNames as $key => $name) {
-            // Create a new user for each customer
+        foreach ($customerNames as $name) {
+            $nrp = 'c1421' . str_pad($nrpCounter, 4, '0', STR_PAD_LEFT);
+
             $user = User::create([
-                'name' => $name,
-                'email' => 'customer' . $key . '@gmail.com',
+                'name'     => $name,
+                'email'    => $nrp . '@john.petra.ac.id',
                 'password' => Hash::make('customer123'),
             ]);
-
-            // Assign the "customer" role
             $user->assignRole("customer");
 
-            // Generate an identity number with the pattern c1421xxxx
-            $randomDigits = str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
-            $identityNumber = 'c1421' . $randomDigits;
-
-            // Create the customer record with the new identity number
             Customer::create([
-                'customer_name' => $name,
-                'identity_number' => $identityNumber, // <-- Pola diubah di sini
-                'department_id' => Department::inRandomOrder()->first()->id,
-                'bank_user_id' => BankUser::inRandomOrder()->first()->id,
-                'user_id' => $user->id
+                'customer_name'   => $name,
+                'identity_number' => $nrp,
+                'department_id'   => Department::inRandomOrder()->first()->id,
+                'bank_name'       => $banks[array_rand($banks)],
+                'account_numbers' => (string) mt_rand(1000000000, 9999999999),
+                'username'        => $name,
+                'user_id'         => $user->id,
             ]);
+            $nrpCounter++;
         }
 
-        // Seed Porters berdasarkan BankUser
-        $bankUsers = \App\Models\BankUser::all();
+        // 4. Seed Porters (PERUBAHAN DI SINI)
+        $portersData = [
+            ['name' => 'Daniel Setiawan', 'bank' => 'BCA', 'account' => '1234567890'],
+            ['name' => 'Sebastian Koichi', 'bank' => 'Mandiri', 'account' => '2345678901'],
+            ['name' => 'Jovan Marcell', 'bank' => 'BNI', 'account' => '3456789012'],
+            ['name' => 'Florencia Wen', 'bank' => 'BRI', 'account' => '4567890123'],
+            ['name' => 'Calvin Wibowo', 'bank' => 'CIMB Niaga', 'account' => '5678901234'],
+            ['name' => 'Stephanie Wibowo', 'bank' => 'Danamon', 'account' => '6789012345'],
+            ['name' => 'Leon Nathanniel C.D', 'bank' => 'PermataBank', 'account' => '7890123456'],
+        ];
 
-        foreach ($bankUsers as $index => $bankUser) {
+        foreach ($portersData as $porterData) {
+            $nrp = 'c1421' . str_pad($nrpCounter, 4, '0', STR_PAD_LEFT);
+
             $user = User::create([
-                'name' => $bankUser->username,
-                'email' => 'porter' . $index . '@gmail.com',
+                'name'     => $porterData['name'],
+                'email'    => $nrp . '@john.petra.ac.id',
                 'password' => Hash::make('porter123'),
             ]);
-
             $user->assignRole("porter");
 
-            \App\Models\Porter::create([
-                'porter_name'     => $bankUser->username,
-                'porter_nrp'      => '24010' . str_pad($index + 1, 3, '0', STR_PAD_LEFT), // Contoh NRP: 24010001 dst
-                'department_id'   => \App\Models\Department::inRandomOrder()->first()->id,
-                'bank_user_id'    => $bankUser->id,
+            Porter::create([
+                'porter_name'     => $porterData['name'],
+                'porter_nrp'      => $nrp,
+                'department_id'   => Department::inRandomOrder()->first()->id,
+                'bank_name'       => $porterData['bank'],
+                'account_numbers' => $porterData['account'],
+                'username'        => $porterData['name'],
                 'porter_isOnline' => false,
-                'user_id' => $user->id
+                'isWorking'       => false,
+                'user_id'         => $user->id,
             ]);
+            $nrpCounter++;
         }
 
         $statuses = [
-            'received',
-            'on-delivery',
-            'finished',
-            'canceled',
-            'waiting',
+            'Received',
+            'On-Delivery',
+            'Finished',
+            'Canceled',
+            'Waiting',
         ];
 
         foreach ($statuses as $status) {
@@ -332,59 +291,5 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ]);
         }
-
-        // // Seed untuk dummy order
-        // for ($i = 0; $i < 20; $i++) {
-        //     $customer = Customer::inRandomOrder()->first();
-        //     $tenant = Tenant::inRandomOrder()->first();
-        //     $products = Product::where('tenant_id', $tenant->id)->inRandomOrder()->take(rand(1, 3))->get();
-        //     $deliveryPoint = DeliveryPoint::inRandomOrder()->first();
-
-        //     $shipping_cost = 10000;
-        //     $total_price = 0;
-
-        //     // Hitung total_price berdasarkan subtotal semua product
-        //     $productQtyMap = [];
-        //     foreach ($products as $product) {
-        //         $qty = rand(1, 3);
-        //         $total_price += $product->price * $qty;
-        //         $productQtyMap[] = ['product' => $product, 'qty' => $qty];
-        //     }
-
-        //     // Buat atau ambil cart berdasarkan kombinasi customer & tenant_location
-        //     $cart = Cart::firstOrCreate([
-        //         'customer_id' => $customer->id,
-        //         'tenant_location_id' => $tenant->tenant_location_id,
-        //         'delivery_point_id' => rand(1, 12)
-        //     ]);
-
-        //     // Buat order
-        //     $order = Order::create([
-        //         'cart_id' => $cart->id,
-        //         'customer_id' => $customer->id,
-        //         'tenant_location_id' => $tenant->tenant_location_id,
-        //         'order_status_id' => DB::table('order_statuses')->inRandomOrder()->first()->id,
-        //         'total_price' => $total_price,
-        //         'shipping_cost' => $shipping_cost,
-        //         'grand_total' => $total_price + $shipping_cost,
-        //         'porter_id' => 1,
-        //         'created_at' => now(),
-        //         'updated_at' => now(),
-        //     ]);
-
-        //     // Buat order item
-        //     foreach ($productQtyMap as $item) {
-        //         OrderItem::create([
-        //             'order_id' => $order->id,
-        //             'product_id' => $item['product']->id,
-        //             'tenant_id' => $tenant->id,
-        //             'quantity' => $item['qty'],
-        //             'price' => $item['product']->price,
-        //             'subtotal' => $item['product']->price * $item['qty'],
-        //             'created_at' => now(),
-        //             'updated_at' => now(),
-        //         ]);
-        //     }
-        // }
     }
 }

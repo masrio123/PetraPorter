@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
+@section('title', 'Manajemen Tenant')
+
 @section('content')
     <div class="container">
-        <h3 class="mb-4"><strong>Tenant Management</strong></h3>
-
         @php
             $groupedTenants = $tenants->groupBy('location');
             $locations = $groupedTenants->keys();
@@ -29,7 +29,7 @@
             {{-- Tombol Tambah Tenant di kanan sejajar --}}
             <div class="ms-3">
                 <a href="{{ route('dashboard.tenants.create') }}" class="btn text-white" style="background-color: #ff7622;">
-                    Tambah Tenant
+                    <i class="bx bx-plus me-1"></i> Tambah Tenant
                 </a>
             </div>
         </div>
@@ -37,7 +37,7 @@
         {{-- Alert Success --}}
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-                <i class="fas fa-check-circle me-2"></i>
+                <i class="bx bx-check-circle me-2"></i>
                 {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -49,54 +49,48 @@
                 <div class="tab-pane fade @if ($loop->first) show active @endif"
                     id="pane-{{ Str::slug($location) }}" role="tabpanel" aria-labelledby="tab-{{ Str::slug($location) }}">
 
-                    <div class="card shadow-sm overflow-auto">
-                        <div class="card-body">
-                            <h5 class="fw-bold text-uppercase mb-3">{{ $location }}</h5>
-
-                            <table class="table table-bordered table-hover align-middle text-center mb-0">
-                                <thead class="table-light">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header border-0 bg-white pt-3 pb-0">
+                             <h5 class="card-title fw-semibold">Daftar Tenant di {{ $location }}</h5>
+                        </div>
+                        <div class="table-responsive text-nowrap">
+                            <table class="table table-hover align-middle">
+                                <thead>
                                     <tr>
-                                        <th style="width: 5%;">No</th>
-                                        <th style="width: 40%;">Nama Tenant</th>
-                                        <th style="width: 20%;">Status</th>
-                                        <th style="width: 35%;">Aksi</th>
+                                        <th class="text-center" style="width: 5%;">No</th>
+                                        <th>Nama Tenant</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="table-border-bottom-0">
                                     @foreach ($tenantGroup as $index => $tenant)
                                         <tr>
-                                            <td>{{ $index + 1 }}</td>
-                                            <td>{{ $tenant->name }}</td>
-                                            <td>
+                                            <td class="text-center">{{ $index + 1 }}</td>
+                                            <td><strong>{{ $tenant->name }}</strong></td>
+                                            <td class="text-center">
                                                 @if ($tenant->isOpen)
-                                                    <span class="d-inline-flex align-items-center gap-2 text-success fw-semibold">
-                                                        <span class="rounded-circle" style="width: 10px; height: 10px; background-color: #28a745;"></span>
-                                                        Buka
+                                                    <span class="badge bg-label-success d-inline-flex align-items-center">
+                                                        <i class="bx bx-check-circle me-1"></i>Buka
                                                     </span>
                                                 @else
-                                                    <span class="d-inline-flex align-items-center gap-2 text-danger fw-semibold">
-                                                        <span class="rounded-circle" style="width: 10px; height: 10px; background-color: #dc3545;"></span>
-                                                        Tutup
+                                                    <span class="badge bg-label-danger d-inline-flex align-items-center">
+                                                        <i class="bx bx-x-circle me-1"></i>Tutup
                                                     </span>
                                                 @endif
                                             </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-2">
+                                            <td class="text-center">
+                                                <div class="d-inline-flex gap-2">
                                                     {{-- Edit --}}
                                                     <a href="{{ route('dashboard.tenants.edit', $tenant->id) }}"
-                                                        class="btn text-white d-flex align-items-center justify-content-center px-3 py-3"
-                                                        style="height: 32px; background-color: blue;">
-                                                        <i class="fas fa-pen me-1" style="font-size: 0.85rem;"></i>
-                                                        <span style="font-size: 0.85rem;">Edit</span>
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="bx bx-pencil"></i>
                                                     </a>
 
                                                     {{-- Hapus --}}
-                                                    <button type="button"
-                                                        class="btn text-white d-flex align-items-center justify-content-center px-3 py-3"
-                                                        style="height: 32px; background-color: red;" data-bs-toggle="modal"
-                                                        data-bs-target="#deleteModal{{ $tenant->id }}">
-                                                        <i class="fas fa-trash me-1" style="font-size: 0.85rem;"></i>
-                                                        <span style="font-size: 0.85rem;">Hapus</span>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ $tenant->id }}">
+                                                        <i class="bx bx-trash"></i>
                                                     </button>
                                                 </div>
                                             </td>
@@ -106,28 +100,22 @@
                                         <div class="modal fade" id="deleteModal{{ $tenant->id }}" tabindex="-1"
                                             aria-labelledby="deleteModalLabel{{ $tenant->id }}" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content shadow-lg rounded-4 border-0">
-                                                    <div class="modal-body text-center p-4">
-                                                        <div class="mb-3">
-                                                            <i class="fas fa-triangle-exclamation fa-3x text-danger"></i>
-                                                        </div>
-                                                        <h5 class="mb-3 fw-bold">Hapus Tenant</h5>
-                                                        <p class="mb-4">
-                                                            Apakah Anda yakin ingin menghapus tenant <br>
-                                                            <strong>{{ $tenant->name }}</strong>? <br> Tindakan ini tidak dapat dibatalkan.
-                                                        </p>
-                                                        <div class="d-flex justify-content-center gap-3">
-                                                            <button type="button"
-                                                                class="btn btn-outline-secondary px-4 rounded-pill"
-                                                                data-bs-dismiss="modal">Batal</button>
-                                                            <form action="{{ route('dashboard.tenants.destroy', $tenant->id) }}"
-                                                                method="POST" class="d-inline">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit"
-                                                                    class="btn btn-danger px-4 rounded-pill">Hapus</button>
-                                                            </form>
-                                                        </div>
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="deleteModalLabel{{ $tenant->id }}">Konfirmasi Hapus</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Apakah Anda yakin ingin menghapus tenant <strong>{{ $tenant->name }}</strong>? <br>Tindakan ini tidak dapat dibatalkan.</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                        <form action="{{ route('dashboard.tenants.destroy', $tenant->id) }}"
+                                                              method="POST" class="d-inline">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-danger">Ya, Hapus</button>
+                                                        </form>
                                                     </div>
                                                 </div>
                                             </div>
@@ -140,8 +128,9 @@
                 </div>
             @empty
                 <div class="text-center text-muted py-5">
-                    <i class="fas fa-store-slash fa-lg mb-2 d-block"></i>
-                    Tidak ada data tenant yang tersedia.
+                    <i class="bx bx-store-alt fs-1 d-block mb-2"></i>
+                    <h4>Belum Ada Data Tenant</h4>
+                    <p>Silakan tambahkan tenant baru untuk memulai.</p>
                 </div>
             @endforelse
         </div>

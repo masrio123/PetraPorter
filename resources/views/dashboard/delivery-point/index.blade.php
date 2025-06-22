@@ -1,120 +1,112 @@
 @extends('layouts.app')
 
+@section('title', 'Manajemen Titik Pengiriman')
+
 @section('content')
 <div class="container">
-    <h3 class="mb-4"><strong>Delivery Point Management</strong></h3>
-
-    <div class="mb-4">
-        <a href="{{ route('dashboard.delivery-points.create') }}" class="btn text-white" style="background-color: #ff7622">
-            Tambah Delivery Point
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        {{-- PERUBAHAN: Mengganti kelas 'btn-primary' dengan style inline untuk warna oranye --}}
+        <a href="{{ route('dashboard.delivery-points.create') }}" class="btn text-white" style="background-color: #ff7622; border-color: #ff7622;">
+            <i class="bx bx-plus me-1"></i> Tambah Titik Pengiriman
         </a>
     </div>
 
     {{-- Alert Success --}}
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bx bx-check-circle me-2"></i>
             {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    <div class="card card-body shadow-sm overflow-auto">
-        <table class="table table-bordered table-hover align-middle">
-            <thead class="table-light text-center">
-                <tr>
-                    <th>No</th>
-                    <th>Nama Delivery Point</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($delivery_points as $key => $point)
+    <div class="card border-0 shadow-sm">
+        <div class="card-header border-0 bg-white pt-3 pb-0">
+            <h5 class="card-title fw-semibold">Daftar Semua Titik Pengiriman</h5>
+        </div>
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover align-middle">
+                <thead>
                     <tr>
-                        <td class="text-center">{{ $key + 1 }}</td>
-                        <td class="text-center">{{ $point->delivery_point_name }}</td>
+                        <th class="text-center" style="width: 5%;">No</th>
+                        <th>Nama Titik Pengiriman</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    @forelse ($delivery_points as $key => $point)
+                        <tr>
+                            <td class="text-center">{{ $key + 1 }}</td>
+                            <td><strong>{{ $point->delivery_point_name }}</strong></td>
+                            <td class="text-center">
+                                @if ($point->isActive)
+                                    <span class="badge bg-label-success">Aktif</span>
+                                @else
+                                    <span class="badge bg-label-secondary">Nonaktif</span>
+                                @endif
+                            </td>
+                            <td class="text-center">
+                                <div class="d-inline-flex gap-2">
+                                    {{-- Toggle Status --}}
+                                    <form action="{{ route('dashboard.delivery-points.toggle-status', $point->id) }}" method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="btn btn-sm {{ $point->isActive ? 'btn-outline-secondary' : 'btn-outline-success' }}"
+                                                title="{{ $point->isActive ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                            <i class="bx {{ $point->isActive ? 'bx-toggle-right' : 'bx-toggle-left' }}"></i>
+                                        </button>
+                                    </form>
 
-                        {{-- Status --}}
-                        <td class="text-center">
-                            @if ($point->isActive)
-                                <span class="badge bg-success">Aktif</span>
-                            @else
-                                <span class="badge bg-secondary">Nonaktif</span>
-                            @endif
-                        </td>
+                                    {{-- Edit --}}
+                                    <a href="{{ route('dashboard.delivery-points.edit', $point->id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bx bx-pencil"></i>
+                                    </a>
 
-                        {{-- Aksi --}}
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center gap-2 flex-wrap">
-
-                                {{-- Edit --}}
-                                <a href="{{ route('dashboard.delivery-points.edit', $point->id) }}"
-                                   class="btn btn-primary d-flex align-items-center gap-1" style="min-width: 90px;">
-                                    <i class="fas fa-pen"></i><span>Edit</span>
-                                </a>
-
-                                {{-- Hapus --}}
-                                <button type="button"
-                                        class="btn btn-danger d-flex align-items-center gap-1"
-                                        data-bs-toggle="modal" data-bs-target="#deleteModal{{ $point->id }}"
-                                        style="min-width: 90px;">
-                                    <i class="fas fa-trash"></i><span>Hapus</span>
-                                </button>
-
-                                {{-- Toggle Status --}}
-                                <form action="{{ route('dashboard.delivery-points.toggle-status', $point->id) }}"
-                                      method="POST" style="min-width: 130px;">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit"
-                                            class="btn {{ $point->isActive ? 'btn-secondary' : 'btn-success' }} d-flex align-items-center gap-1 w-100"
-                                            title="{{ $point->isActive ? 'Nonaktifkan' : 'Aktifkan' }}">
-                                        <i class="fas {{ $point->isActive ? 'fa-eye-slash' : 'fa-eye' }}"></i>
-                                        <span>{{ $point->isActive ? 'Nonaktifkan' : 'Aktifkan' }}</span>
+                                    {{-- Hapus --}}
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ $point->id }}">
+                                        <i class="bx bx-trash"></i>
                                     </button>
-                                </form>
-                            </div>
+                                </div>
 
-                            {{-- Delete Modal --}}
-                            <div class="modal fade" id="deleteModal{{ $point->id }}" tabindex="-1"
-                                aria-labelledby="deleteModalLabel{{ $point->id }}" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content shadow-lg rounded-4 border-0">
-                                        <div class="modal-body text-center p-4">
-                                            <div class="mb-3">
-                                                <i class="fas fa-triangle-exclamation fa-3x text-danger"></i>
+                                {{-- Modal Hapus --}}
+                                <div class="modal fade" id="deleteModal{{ $point->id }}" tabindex="-1"
+                                     aria-labelledby="deleteModalLabel{{ $point->id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteModalLabel{{ $point->id }}">Konfirmasi Hapus</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
-                                            <h5 class="fw-bold mb-3">Hapus Delivery Point</h5>
-                                            <p class="mb-4">
-                                                Apakah Anda yakin ingin menghapus delivery point <br>
-                                                <strong>{{ $point->delivery_point_name }}</strong>? <br>
-                                                Tindakan ini tidak dapat dibatalkan.
-                                            </p>
-                                            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                                                <button type="button" class="btn btn-outline-secondary px-4 rounded-pill"
-                                                        data-bs-dismiss="modal">Batal</button>
-                                                <form action="{{ route('dashboard.delivery-points.destroy', $point->id) }}"
-                                                      method="POST" class="d-inline">
+                                            <div class="modal-body">
+                                                <p>Apakah Anda yakin ingin menghapus titik pengiriman <strong>{{ $point->delivery_point_name }}</strong>? <br>Tindakan ini tidak dapat dibatalkan.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                <form action="{{ route('dashboard.delivery-points.destroy', $point->id) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger px-4 rounded-pill">Hapus</button>
+                                                    <button type="submit" class="btn btn-danger">Ya, Hapus</button>
                                                 </form>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="4" class="text-center text-muted py-4">
-                            Tidak ada data delivery point.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="text-center py-4">
+                                <i class="bx bx-map-pin fs-1 d-block mb-2 text-muted"></i>
+                                <h5 class="text-muted">Belum Ada Titik Pengiriman</h5>
+                                <p class="text-muted">Silakan tambahkan data baru untuk memulai.</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 @endsection

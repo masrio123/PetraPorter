@@ -5,19 +5,20 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TenantController;
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\OrderHistoryController as ApiOrderHistoryController;
+use App\Http\Controllers\Api\ChatController as ApiChatController;
 use App\Http\Controllers\Api\CartController as ApiCartController;
 
 use App\Http\Controllers\Api\OrderController as ApiOrderController;
+use App\Http\Controllers\Api\PorterController as ApiPorterController;
 use App\Http\Controllers\Api\TenantController as ApiTenantController;
 use App\Http\Controllers\Api\ProductController as ApiProductController;
 use App\Http\Controllers\Api\CartItemController as ApiCartItemController;
 use App\Http\Controllers\Api\CategoryController as ApiCategoryController;
 use App\Http\Controllers\Api\CustomerController as ApiCustomerController;
 use App\Http\Controllers\Api\OrderItemController as ApiOrderItemController;
+
 use App\Http\Controllers\Api\DeliveryPointController as ApiDeliveryPointController;
 use App\Http\Controllers\Api\TenantLocationController as ApiTenantLocationController;
-use App\Http\Controllers\Api\PorterController as ApiPorterController;
 
 
 
@@ -105,4 +106,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // di routes/api.php
     Route::get('/orders/summary/finished', [ApiOrderController::class, 'getFinishedOrdersSummary']);
     
+    // Rute untuk mengambil semua pesan dalam satu chat
+Route::get('/chats/{orderId}/messages', [ApiChatController::class, 'getMessages']);
+
+// Rute untuk mengirim pesan baru
+Route::post('/chats/{orderId}/messages', [ApiChatController::class, 'sendMessage']);
+
 });

@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Order;
-use App\Models\OrderStatus;
-use Illuminate\Http\Request;
-use App\Models\DeliveryPoint;
 use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Models\DeliveryPoint;
+use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-
-        // Tampilkan semua order
+    // Tampilkan semua order
     public function showAll()
     {
         try {
@@ -21,7 +19,6 @@ class OrderController extends Controller
                 'status',
                 'customer',
                 'tenantLocation',
-                'status'
             ])->get();
 
             $formattedOrders = $orders->map(function ($order) {
@@ -33,7 +30,7 @@ class OrderController extends Controller
                         'items' => $items->map(function ($item) {
                             return [
                                 'product_id' => $item->product_id,
-                                'product_name' => $item->product->name,
+                                'product_name' => optional($item->product)->name,
                                 'quantity' => $item->quantity,
                                 'price' => $item->price,
                                 'subtotal' => $item->subtotal,
@@ -51,7 +48,7 @@ class OrderController extends Controller
                     'tenant_location_name' => $order->tenantLocation->location_name,
                     'items' => $groupedItems,
                     'total_price' => $order->total_price,
-                    'order_status' => optional(value: $order->status)->order_status,
+                    'order_status' => optional($order->status)->order_status,
                     'shipping_cost' => $order->shipping_cost,
                     'grand_total' => $order->grand_total,
                 ];
@@ -91,7 +88,6 @@ class OrderController extends Controller
                 'status',
                 'customer',
                 'tenantLocation',
-                'status'
             ])->find($id);
 
             if (!$order) {
@@ -108,7 +104,7 @@ class OrderController extends Controller
                     'items' => $items->map(function ($item) {
                         return [
                             'product_id' => $item->product_id,
-                            'product_name' => $item->product->name,
+                            'product_name' => optional($item->product)->name,
                             'quantity' => $item->quantity,
                             'price' => $item->price,
                             'subtotal' => $item->subtotal,
@@ -144,10 +140,11 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
     public function getCustomerActivity($customerId)
     {
         try {
-            $orders = Order::with(['items.tenant', 'status', 'customer', 'tenantLocation', 'porter.department', 'porter.bankUser'])
+            $orders = Order::with(['items.tenant', 'status', 'customer', 'tenantLocation', 'porter.department'])
                 ->where('customer_id', $customerId)->get();
 
             if ($orders->isEmpty()) {
@@ -161,7 +158,6 @@ class OrderController extends Controller
                         'tenant_name' => optional($items->first()->tenant)->name ?? 'Tenant Dihapus',
                         'items' => $items->map(function ($item) {
                             return [
-                                'product_id' => $item->product_id,
                                 'product_name' => $item->product_name,
                                 'quantity' => $item->quantity,
                                 'price' => $item->price,
@@ -172,7 +168,6 @@ class OrderController extends Controller
                     ];
                 })->values();
 
-                // --- PERBAIKAN DI SINI --- Menggunakan optional() untuk semua relasi
                 return [
                     'order_id' => $order->id,
                     'cart_id' => $order->cart_id,
@@ -185,7 +180,9 @@ class OrderController extends Controller
                         'name' => $order->porter->porter_name,
                         'nrp' => $order->porter->porter_nrp,
                         'department' => optional($order->porter->department)->department_name ?? '-',
-                        'account_number' => optional($order->porter->bankUser)->account_number ?? '-',
+                        'bank_name' => $order->porter->bank_name,
+                        'account_number' => $order->porter->account_numbers,
+                        'username' => $order->porter->username,
                     ] : null,
                     'order_status' => optional($order->status)->order_status ?? 'Unknown',
                     'order_date' => $order->created_at->format('Y-m-d H:i:s'),
@@ -201,46 +198,4 @@ class OrderController extends Controller
             return response()->json(['success' => false, 'message' => 'Gagal mengambil data order customer.', 'error' => $e->getMessage()], 500);
         }
     }
-
-    public function getFinishedOrdersSummary()
-    {
-        try {
-            // 1. Dapatkan ID untuk status 'finished'
-            // Ganti 'status' dengan nama kolom Anda yang sebenarnya jika berbeda (misal: 'name')
-            $finishedStatus = OrderStatus::where('status', 'finished')->first();
-
-            // Jika status 'finished' tidak terdefinisi di database, kembalikan error.
-            if (!$finishedStatus) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Konfigurasi status "finished" tidak ditemukan.',
-                ], 500);
-            }
-
-            // 2. Lakukan query untuk menghitung order dan menjumlahkan shipping_cost
-            // Query ini hanya akan berjalan pada order yang memiliki order_status_id yang cocok.
-            $ordersQuery = Order::where('order_status_id', $finishedStatus->id);
-
-            $totalFinishedOrders = $ordersQuery->count();
-            $totalShippingCost = $ordersQuery->sum('shipping_cost');
-
-            // 3. Kembalikan data dalam format JSON
-            return response()->json([
-                'success' => true,
-                'message' => 'Summary of all finished orders.',
-                'data' => [
-                    'total_finished_orders' => $totalFinishedOrders,
-                    'total_shipping_income' => (int) $totalShippingCost,
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil summary order.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-    // ... (Fungsi-fungsi lain juga perlu diperiksa dan diberi optional() jika perlu)
 }

@@ -34,4 +34,11 @@ class Tenant extends Model
     {
         return $this->hasMany(CartItem::class);
     }
+
+    protected static function booted()
+    {
+        static::deleting(function ($tenant) {
+            $tenant->products()->delete();
+        });
+    }
 }

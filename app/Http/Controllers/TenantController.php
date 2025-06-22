@@ -110,11 +110,6 @@ class TenantController extends Controller
     public function destroy($id)
     {
         $tenant = Tenant::findOrFail($id);
-
-        if ($tenant->products()->count() > 0) {
-            return redirect()->back()->with('error', 'Tenant tidak dapat dihapus karena masih memiliki produk.');
-        }
-
         $tenant->delete();
         return redirect()->route('dashboard.tenants.index')->with('success', 'Tenant berhasil dihapus.');
     }

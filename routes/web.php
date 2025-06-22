@@ -24,7 +24,6 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.', 'middleware' => ['a
     Route::resource('/tenants', TenantController::class);
     Route::resource('/porters', controller: PorterController::class);
     Route::resource('/delivery-points', DeliveryPointController::class);
-    Route::resource('/bank-users', controller: BankUserController::class);
     Route::get('/activities', action: [ActivityController::class, 'index'])->name('activity.activity');
 });
 

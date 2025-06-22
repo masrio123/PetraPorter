@@ -11,6 +11,8 @@ use App\Models\Cart;
 use App\Models\DeliveryPoint;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\ChatController as ApiChatController;
+
 
 class PorterController extends Controller
 {
@@ -24,7 +26,7 @@ class PorterController extends Controller
             'items.tenant',          // tenant per item
         ])
             ->where('porter_id', $porterId)
-            ->where('order_status_id', 7) // status: waiting_for_acceptance
+            ->where('order_status_id', 5) // status: waiting_for_acceptance
             ->latest()
             ->get();
 
@@ -293,7 +295,7 @@ class PorterController extends Controller
                     'customer_id' => $order->customer->id ?? null,
                     'customer_name' => $order->customer->customer_name ?? '-',
                     'tenant_location_id' => $order->tenantLocation->id ?? null,
-                    'tenant_location_name' => $delivery_point_name ?? '-',
+                    'delivery_point_name' => $delivery_point_name ?? '-',
                     'order_status' => optional($order->status)->order_status ?? '-',
                     'items' => $groupedItems,
                     'total_price' => $order->total_price,
@@ -353,58 +355,132 @@ class PorterController extends Controller
         ]);
     }
 
-    public function finishOrder($orderId)
+     public function finishOrder($orderId)
     {
         $order = Order::find($orderId);
 
         if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order tidak ditemukan.',
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Order tidak ditemukan.'], 404);
         }
-
-        // Pastikan status saat ini adalah delivered (4)
         if ($order->order_status_id != 2) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order belum diantar, tidak bisa diselesaikan.',
-            ], 400);
+            return response()->json(['success' => false, 'message' => 'Order belum diantar, tidak bisa diselesaikan.'], 400);
         }
 
-        // Cek jika sudah selesai sebelumnya
-        if ($order->order_status_id == 3) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order ini sudah ditandai sebagai selesai.',
-            ], 400);
-        }
-
-        // Ubah status menjadi finished
+        // Ubah status menjadi finished (ID: 3)
         $order->order_status_id = 3;
         $order->save();
 
+        $porter = Porter::find($order->porter_id);
+        if ($porter) {
+            $porter->isWorking = false;
+            $porter->porter_isOnline = true;
+            $porter->save();
+        }
+
+        ApiChatController::cleanupMessages($orderId);
+
         return response()->json([
             'success' => true,
-            'message' => 'Order selesai.',
-            'data' => [
-                'order_id' => $order->id,
-                'new_status' => $order->order_status_id,
-            ],
+            'message' => 'Order selesai dan riwayat chat telah dibersihkan.',
+            'data' => ['order_id' => $order->id, 'new_status' => $order->order_status_id],
         ]);
     }
 
     public function getPorterActivity($porterId)
+{
+    try {
+        $orders = Order::with([
+            'items.product',
+            'items.tenant',
+            'status',
+            'customer',
+            'tenantLocation'
+        ])->where('porter_id', $porterId)->get();
+
+        if ($orders->isEmpty()) {
+            return response()->json([
+                'success' => true, // Diubah menjadi true agar Flutter tidak menganggapnya error
+                'data' => [],
+                'message' => 'No orders found for this porter.',
+            ]);
+        }
+
+        $formattedOrders = $orders->map(function ($order) {
+            $groupedItems = $order->items->groupBy('tenant_id')->map(function ($items, $tenantId) {
+                return [
+                    'tenant_id' => (int) $tenantId,
+                    'tenant_name' => optional($items->first()->tenant)->name,
+                    'items' => $items->map(function ($item) {
+                        return [
+                            'product_name' => $item->product_name,
+                            'quantity' => $item->quantity,
+                            'price' => $item->price,
+                            'subtotal' => $item->subtotal,
+                            'notes' => $item->notes
+                        ];
+                    })->values(),
+                ];
+            })->values();
+
+            // VVVV--- BLOK LOGIC YANG KITA TAMBAHKAN ---VVVV
+            // Inisialisasi dengan null sebagai nilai default
+            $delivery_point_name = null; 
+            
+            // Cari data Cart berdasarkan cart_id yang ada di order
+            $cart = Cart::find($order->cart_id);
+
+            // Jika cart ditemukan, cari nama titik antarnya
+            if ($cart) {
+                $deliveryPoint = DeliveryPoint::find($cart->delivery_point_id);
+                // Jika titik antar ditemukan, ambil namanya
+                if ($deliveryPoint) {
+                    $delivery_point_name = $deliveryPoint->delivery_point_name;
+                }
+            }
+            // ^^^^--------------------------------------------^^^^
+
+            return [
+                'order_id' => $order->id,
+                'cart_id' => $order->cart_id,
+                'customer_id' => optional($order->customer)->id,
+                'customer_name' => optional($order->customer)->customer_name,
+                'tenant_location_id' => optional($order->tenantLocation)->id,
+                'tenant_location_name' => optional($order->tenantLocation)->location_name,
+                
+                // VVVV--- KEY BARU KITA SISIPKAN DI SINI ---VVVV
+                'delivery_point_name' => $delivery_point_name,
+                // ^^^^----------------------------------------^^^^
+
+                'order_status' => optional($order->status)->order_status,
+                'items' => $groupedItems,
+                'total_price' => $order->total_price,
+                'shipping_cost' => $order->shipping_cost,
+                'grand_total' => $order->grand_total,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'List of orders for porter_id: ' . $porterId,
+            'data' => $formattedOrders,
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal mengambil data order untuk porter.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
+    public function workSummary($porterId)
     {
         try {
-            $orders = Order::with([
-                'items.product',
-                'items.tenant',
-                'status',
-                'customer',
-                'tenantLocation'
-            ])->where('porter_id', $porterId)->get();
+            // Ambil semua order yang memiliki porter_id sama
+            $orders = Order::where('porter_id', $porterId)->get();
 
+            // Jika tidak ada order ditemukan
             if ($orders->isEmpty()) {
                 return response()->json([
                     'success' => false,
@@ -412,93 +488,31 @@ class PorterController extends Controller
                 ], 404);
             }
 
-            $formattedOrders = $orders->map(function ($order) {
-                $groupedItems = $order->items->groupBy('tenant_id')->map(function ($items, $tenantId) {
-                    return [
-                        'tenant_id' => (int) $tenantId,
-                        'tenant_name' => optional($items->first()->tenant)->name,
-                        'items' => $items->map(function ($item) {
-                            return [
-                                'product_name' => $item->product_name,
-                                'quantity' => $item->quantity,
-                                'price' => $item->price,
-                                'subtotal' => $item->subtotal,
-                                'notes' => $item->notes
-                            ];
-                        })->values(),
-                    ];
-                })->values();
-
-                return [
-                    'order_id' => $order->id,
-                    'cart_id' => $order->cart_id,
-                    'customer_id' => $order->customer->id,
-                    'customer_name' => $order->customer->customer_name,
-                    'tenant_location_id' => $order->tenantLocation->id,
-                    'tenant_location_name' => $order->tenantLocation->location_name,
-                    'order_status' => optional($order->status)->order_status,
-                    'items' => $groupedItems,
-                    'total_price' => $order->total_price,
-                    'shipping_cost' => $order->shipping_cost,
-                    'grand_total' => $order->grand_total,
-                ];
-            });
+            // Hitung total order dan total pendapatan dari shipping cost
+            $totalOrders = $orders->count();
+            $totalIncome = $orders->sum('shipping_cost');
 
             return response()->json([
                 'success' => true,
-                'message' => 'List of orders for porter_id: ' . $porterId,
-                'data' => $formattedOrders,
+                'message' => 'Summary of orders handled by porter_id: ' . $porterId,
+                'data' => [
+                    'total_orders_handled' => $totalOrders,
+                    'total_income' => $totalIncome,
+                ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengambil data order untuk porter.',
+                'message' => 'Failed to calculate porter summary.',
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }
-
-    public function workSummary($porterId)
-{
-    try {
-        // Ambil semua order yang memiliki porter_id sama dan status finished
-        $orders = Order::where('porter_id', $porterId)
-                      ->where('order_status_id', 3)
-                      ->get();
-
-        // Jika tidak ada order ditemukan
-        if ($orders->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No finished orders found for this porter.',
-            ], 404);
-        }
-
-        // Hitung total order dan total pendapatan dari shipping cost
-        $totalOrders = $orders->count();
-        $totalIncome = $orders->sum('shipping_cost');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Summary of finished orders handled by porter_id: ' . $porterId,
-            'data' => [
-                'total_orders_handled' => $totalOrders,
-                'total_income' => $totalIncome,
-            ],
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to calculate porter summary.',
-            'error' => $e->getMessage(),
-        ], 500);
-    }
-}
+    } // Di controller Laravel Anda
     public function profileApi($id)
     {
         // Menggunakan try-catch adalah praktik yang baik jika findOrFail bisa gagal
         try {
-            $porter = Porter::with(['department', 'bankUser'])->findOrFail($id);
+            $porter = Porter::with(['department'])->findOrFail($id);
 
             // Bungkus respons dalam struktur yang diharapkan oleh Flutter
             return response()->json([
@@ -508,7 +522,10 @@ class PorterController extends Controller
                     'porter_name'    => $porter->porter_name,
                     'porter_nrp'     => $porter->porter_nrp,
                     'department'     => $porter->department?->department_name,
-                    'account_number' => $porter->bankUser?->account_number,
+                    'bank_name'     => $porter->bank_name,
+                    'account_number' => $porter->account_numbers,
+                    'username' => $porter->username
+
                 ]
             ], 200); // Kode status OK
 

@@ -16,16 +16,16 @@ use Illuminate\Support\Facades\Log;
 class OrderItemController extends Controller
 {
 
-    public function searchPorter($orderId)
+     public function searchPorter($orderId)
     {
         try {
+            // PERBAIKAN 1: Hapus 'porter.bankUser' dari eager loading
             $order = Order::with([
                 'customer.department',
                 'status',
                 'porter.department',
-                'porter.bankUser',
                 'tenantLocation',
-                'items.tenant' // Hanya butuh relasi tenant, bukan product lagi
+                'items.tenant'
             ])->find($orderId);
 
             if (!$order) {
@@ -37,7 +37,8 @@ class OrderItemController extends Controller
 
             if ($orderStatusId == 5) {
                 if (!$order->porter_id) {
-                    $porter = Porter::with(['department', 'bankUser'])
+                    // PERBAIKAN 2: Hapus 'bankUser' dari eager loading saat mencari porter
+                    $porter = Porter::with('department')
                         ->where('porter_isOnline', true)
                         ->where(fn($q) => $q->whereNull('timeout_until')->orWhere('timeout_until', '<=', now()))
                         ->inRandomOrder()
@@ -53,8 +54,8 @@ class OrderItemController extends Controller
                 }
             }
             
-            // Re-fetch order untuk mendapatkan data porter yang baru di-assign
-            $order->load(['porter.department', 'porter.bankUser']);
+            // PERBAIKAN 3: Hapus 'porter.bankUser' dari re-load
+            $order->load(['porter.department']);
 
             $statusLabelMap = [
                 1 => 'Pesanan diterima',
@@ -67,10 +68,12 @@ class OrderItemController extends Controller
             })->values()->all();
 
             if ($order->porter_id) {
+                // Pastikan relasi porter dimuat ulang setelah di-assign
+                $order->refresh();
+
                 $groupedItems = $order->items->groupBy('tenant_id')->map(function ($items) {
                     return [
                         'tenant_name' => optional($items->first()->tenant)->name ?? 'Tenant Dihapus',
-                        // --- PERUBAHAN DI SINI --- Mengambil data dari kolom snapshot
                         'products' => $items->map(function ($item) {
                             return [
                                 'product_name' => $item->product_name,
@@ -100,7 +103,10 @@ class OrderItemController extends Controller
                             'name' => $order->porter->porter_name,
                             'nrp' => $order->porter->porter_nrp,
                             'department' => optional($order->porter->department)->department_name ?? '-',
-                            'account_number' => optional($order->porter->bankUser)->account_number ?? '-',
+                            // PERBAIKAN 4: Menggunakan 3 kolom baru dari model Porter
+                            'bank_name' => $order->porter->bank_name,
+                            'account_numbers' => $order->porter->account_numbers,
+                            'username' => $order->porter->username,
                         ],
                         'items' => $groupedItems
                     ]
@@ -114,6 +120,7 @@ class OrderItemController extends Controller
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan internal.'], 500);
         }
     }
+
 
     public function cancelOrder($orderId)
     {

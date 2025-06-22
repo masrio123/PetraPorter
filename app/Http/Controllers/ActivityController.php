@@ -10,8 +10,9 @@ use Carbon\Carbon;
 class ActivityController extends Controller
 {
     // Fungsi untuk ambil data aktivitas semua porter (dipanggil dari index view)
-    public function getAllActivities()
+  public function getAllActivities()
     {
+        // 1. HAPUS 'porter.bankUser' DARI SINI
         $orders = Order::with([
             'items.product',
             'items.tenant',
@@ -19,7 +20,7 @@ class ActivityController extends Controller
             'customer.department',
             'tenantLocation',
             'porter.department',
-            'porter.bankUser'
+            // 'porter.bankUser' <-- HAPUS BARIS INI
         ])->get();
 
         if ($orders->isEmpty()) {
@@ -27,14 +28,14 @@ class ActivityController extends Controller
         }
 
         return $orders->map(function ($order) {
+            // ... (kode untuk $groupedItems tetap sama)
             $groupedItems = $order->items->groupBy('tenant_id')->map(function ($items, $tenantId) {
                 return [
                     'tenant_id' => (int) $tenantId,
                     'tenant_name' => optional($items->first()->tenant)->name,
                     'items' => $items->map(function ($item) {
                         return [
-                            'product_id' => $item->product_id,
-                            'product_name' => $item->product->name,
+                            'product_name' => $item->product_name,
                             'quantity' => $item->quantity,
                             'price' => $item->price,
                             'subtotal' => $item->subtotal,
@@ -47,8 +48,6 @@ class ActivityController extends Controller
             return [
                 'order_id' => $order->id,
                 'cart_id' => $order->cart_id,
-
-                // Informasi lengkap customer
                 'customer' => [
                     'id' => $order->customer->id,
                     'name' => $order->customer->customer_name,
@@ -56,13 +55,14 @@ class ActivityController extends Controller
                     'department' => optional($order->customer->department)->department_name,
                 ],
 
-                // Informasi lengkap porter
+                // 2. PERBAIKI BAGIAN INI
                 'porter' => $order->porter ? [
                     'id' => $order->porter->id,
                     'name' => $order->porter->porter_name,
                     'nrp' => $order->porter->porter_nrp,
                     'department' => optional($order->porter->department)->department_name,
-                    'account_number' => optional($order->porter->bankUser)->account_number,
+                    // Ubah 'optional($order->porter->bankUser)->account_number' menjadi seperti di bawah:
+                    'account_number' => $order->porter->account_numbers, 
                 ] : null,
 
                 'tenant_location_id' => $order->tenantLocation->id,
