@@ -33,14 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/products/{id}/tenants-products', [ApiProductController::class, 'getProductsByTenantLocation']);
     Route::post('/products/store', [ApiProductController::class, 'storeProduct']);
     Route::put('products/{id}', [ApiProductController::class, 'updateProduct']);
-    Route::delete('/products/{productId}', action: [ApiProductController::class, 'deleteProduct']);
-
-    //Delivery Points
-    Route::get('/delivery-points', [ApiDeliveryPointController::class, 'fetchDeliveryPoint']);
-    Route::post('/delivery-points/store', [ApiDeliveryPointController::class, 'store']);
-    Route::put('/delivery-points/{id}/edit', [ApiDeliveryPointController::class, 'edit']);
-    Route::delete('/delivery-points/{id}/delete', [ApiDeliveryPointController::class, 'destroy']);
-
+    Route::delete('/products/{productId}', action: [ApiProductController::class, 'deleteProduct']); 
     //Cart
     Route::post('/cart', [ApiCartController::class, 'createCart']);
     Route::get('/cart/{id}', [ApiCartController::class, 'showCart']);
@@ -71,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [ApiCustomerController::class, 'show']);      // GET detail customer
         Route::put('/{id}', [ApiCustomerController::class, 'update']);    // PUT update customer
         Route::delete('/{id}', [ApiCustomerController::class, 'destroy']); // DELETE customer
+        Route::put('/{id}/update-bank', [ApiCustomerController::class, 'updateBank']);
     });
 
     Route::get('/categories', [ApiCategoryController::class, 'fetchCategories']);
@@ -102,6 +96,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/porters/profile/{porterId}', [ApiPorterController::class, 'profileApi']);
     Route::post('/porter/{id}/toggle-is-open', [ApiPorterController::class, 'getToggleIsOpen']);
     Route::put('/porter/{id}/toggle-is-open', [ApiPorterController::class, 'UpdateToggleIsOpen']);
+    Route::get('/porters/{porterId}/reviews', [ApiPorterController::class, 'getReviewsForPorter']);
+
 
     // di routes/api.php
     Route::get('/orders/summary/finished', [ApiOrderController::class, 'getFinishedOrdersSummary']);
@@ -111,5 +107,7 @@ Route::get('/chats/{orderId}/messages', [ApiChatController::class, 'getMessages'
 
 // Rute untuk mengirim pesan baru
 Route::post('/chats/{orderId}/messages', [ApiChatController::class, 'sendMessage']);
+Route::get('/porters/{porterId}/edit-bank', [ApiPorterController::class, 'editBank'])->name('dashboard.porters.editBank');
+Route::put('/porters/{porterId}/update-bank', [ApiPorterController::class, 'updateBank'])->name('dashboard.porters.updateBank');
 
 });

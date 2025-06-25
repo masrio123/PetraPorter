@@ -1,82 +1,94 @@
-@extends('layouts.createLayout')
+@extends('layouts.app') {{-- Menyesuaikan dengan layout utama Anda --}}
+
+@section('title', 'Tambah Tenant Baru')
 
 @section('content')
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-12 card card-body">
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-12">
 
-                {{-- Header dengan tombol back dan judul tanpa border bawah --}}
-                <div class="d-flex align-items-center gap-5 mb-4 border-bottom-0">
-                    <a href="{{ route('dashboard.tenants.index') }}" class="btn btn-outline-secondary btn-sm">
-                        <i class="fas fa-arrow-left"></i>
-                    </a>
-                    <h3 class="mb-0"><strong>Tambah Tenant</strong></h3>
+            {{-- Card utama untuk form --}}
+            <div class="card shadow-sm border-0">
+                {{-- Header Card --}}
+                <div class="card-header bg-white border-0 py-3 px-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title mb-0 fw-bold">
+                            <i class="bx bx-store-alt me-2"></i>Tambah Tenant Baru
+                        </h4>
+                        <a href="{{ route('dashboard.tenants.index') }}" class="btn btn-outline-secondary btn-sm" data-bs-toggle="tooltip" title="Kembali ke Daftar">
+                            <i class="bx bx-left-arrow-alt"></i> Kembali
+                        </a>
+                    </div>
                 </div>
 
-                {{-- Alert Error (Bootstrap alert-danger) --}}
-                @if ($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
+                {{-- Body Card --}}
+                <div class="card-body p-md-5 p-4">
 
-                {{-- Form Tambah Tenant --}}
-                <form action="{{ route('dashboard.tenants.store') }}" method="POST">
-                    @csrf
+                    {{-- Alert untuk Error Validasi --}}
+                    @if ($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <h6 class="alert-heading fw-bold">Terjadi Kesalahan!</h6>
+                            <ul class="mb-0 ps-3">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
 
-                    <div class="mb-3">
-                        <label for="tenant_name" class="form-label">Nama Tenant</label>
-                        <input type="text" name="name" id="tenant_name" class="form-control" required value="{{ old('name') }}">
-                    </div>
+                    {{-- Form Tambah --}}
+                    <form action="{{ route('dashboard.tenants.store') }}" method="POST">
+                        @csrf
 
-                    <div class="mb-3">
-                        <label for="tenant_location_id" class="form-label">Lokasi</label>
-                        <select name="tenant_location_id" id="tenant_location_id" class="form-select" required>
-                            <option disabled selected>-- Pilih Lokasi --</option>
-                            @foreach ($tenantLocations as $location)
-                                <option value="{{ $location->id }}" {{ old('tenant_location_id') == $location->id ? 'selected' : '' }}>
-                                    {{ $location->location_name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                        {{-- Input Nama --}}
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nama Tenant (Juga menjadi Nama User)</label>
+                            <input type="text" name="name" id="name" class="form-control form-control-lg" required value="{{ old('name') }}" placeholder="Contoh: Kedai Kopi Senja">
+                        </div>
 
-                    <div class="mb-4">
-                        <label for="isOpen" class="form-label">Status</label>
-                        <select name="isOpen" id="isOpen" class="form-select" required>
-                            <option value="1" {{ old('isOpen') == '1' ? 'selected' : '' }}>Buka</option>
-                            <option value="0" {{ old('isOpen') == '0' ? 'selected' : '' }}>Tutup</option>
-                        </select>
-                    </div>
-                    <br>
-                    <button type="submit" class="btn text-white" style="background-color: #ff7622;"">Tambah</button>
-                </form>
+                        {{-- Input Email --}}
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Login</label>
+                            <input type="email" name="email" id="email" class="form-control form-control-lg" required value="{{ old('email') }}" placeholder="contoh@email.com">
+                            <div class="form-text">Password default akan dibuat secara otomatis: <strong>tenant123</strong></div>
+                        </div>
+
+                        {{-- Input Lokasi Tenant --}}
+                        <div class="mb-3">
+                            <label for="tenant_location_id" class="form-label">Lokasi Tenant</label>
+                            <select name="tenant_location_id" id="tenant_location_id" class="form-select form-select-lg" required>
+                                <option value="" disabled selected>-- Pilih Lokasi --</option>
+                                @foreach ($tenantLocations as $location)
+                                    <option value="{{ $location->id }}" {{ old('tenant_location_id') == $location->id ? 'selected' : '' }}>
+                                        {{ $location->location_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        {{-- Tombol Submit --}}
+                        <div class="d-grid mt-6">
+                            <button type="submit" class="btn text-white btn-lg" style="background-color: #ff7622;">
+                                <i class="bx bx-plus-circle me-1"></i> Tambah Tenant & User
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-
-    {{-- Modal Bootstrap untuk pesan sukses --}}
-    @if(session()->has('success'))
-        <div class="modal fade show" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-modal="true" style="display: block; background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-success">
-                    <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title" id="successModalLabel">Berhasil</h5>
-                        <a href="{{ url()->current() }}" class="btn-close"></a>
-                    </div>
-                    <div class="modal-body">
-                        {{ session('success') }}
-                    </div>
-                    <div class="modal-footer">
-                        <a href="{{ url()->current() }}" class="btn btn-success">Tutup</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    // Inisialisasi Tooltip Bootstrap jika ada
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+@endpush

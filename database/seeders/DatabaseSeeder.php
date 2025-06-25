@@ -241,41 +241,6 @@ class DatabaseSeeder extends Seeder
             $nrpCounter++;
         }
 
-        // 4. Seed Porters (PERUBAHAN DI SINI)
-        $portersData = [
-            ['name' => 'Daniel Setiawan', 'bank' => 'BCA', 'account' => '1234567890'],
-            ['name' => 'Sebastian Koichi', 'bank' => 'Mandiri', 'account' => '2345678901'],
-            ['name' => 'Jovan Marcell', 'bank' => 'BNI', 'account' => '3456789012'],
-            ['name' => 'Florencia Wen', 'bank' => 'BRI', 'account' => '4567890123'],
-            ['name' => 'Calvin Wibowo', 'bank' => 'CIMB Niaga', 'account' => '5678901234'],
-            ['name' => 'Stephanie Wibowo', 'bank' => 'Danamon', 'account' => '6789012345'],
-            ['name' => 'Leon Nathanniel C.D', 'bank' => 'PermataBank', 'account' => '7890123456'],
-        ];
-
-        foreach ($portersData as $porterData) {
-            $nrp = 'c1421' . str_pad($nrpCounter, 4, '0', STR_PAD_LEFT);
-
-            $user = User::create([
-                'name'     => $porterData['name'],
-                'email'    => $nrp . '@john.petra.ac.id',
-                'password' => Hash::make('porter123'),
-            ]);
-            $user->assignRole("porter");
-
-            Porter::create([
-                'porter_name'     => $porterData['name'],
-                'porter_nrp'      => $nrp,
-                'department_id'   => Department::inRandomOrder()->first()->id,
-                'bank_name'       => $porterData['bank'],
-                'account_numbers' => $porterData['account'],
-                'username'        => $porterData['name'],
-                'porter_isOnline' => false,
-                'isWorking'       => false,
-                'user_id'         => $user->id,
-            ]);
-            $nrpCounter++;
-        }
-
         $statuses = [
             'Received',
             'On-Delivery',

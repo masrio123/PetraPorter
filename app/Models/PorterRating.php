@@ -12,6 +12,7 @@ class PorterRating extends Model
     protected $fillable = [
         'porter_id',
         'order_id',
+        'review',
         'rating',
     ];
 

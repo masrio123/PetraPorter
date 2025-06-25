@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 class OrderItemController extends Controller
 {
 
-     public function searchPorter($orderId)
+    public function searchPorter($orderId)
     {
         try {
             // PERBAIKAN 1: Hapus 'porter.bankUser' dari eager loading
@@ -45,15 +45,22 @@ class OrderItemController extends Controller
                         ->first();
 
                     if (!$porter) {
-                        return response()->json(['success' => false, 'message' => 'Tidak ada porter online saat ini.', 'status' => 'Sedang menunggu porter'], 404);
+                        // Kembalikan status 200 OK, tapi dengan pesan bahwa porter tidak ditemukan.
+                        // 'success' => false menandakan operasi tidak berhasil, tapi request itu sendiri valid.
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Tidak ada porter online saat ini. Mencari lagi...',
+                            'status' => [], // Kirim array status kosong
+                            'data' => null   // Tidak ada data porter untuk dikirim
+                        ], 200); // Penting: Gunakan status 200 OK
                     }
 
                     $order->porter_id = $porter->id;
                     $order->save();
-                    $systemMessage = "Sistem menunjuk porter bernama {$porter->porter_name}.";
+                    $systemMessage = "Mencari porter yang tersedia...";
                 }
             }
-            
+
             // PERBAIKAN 3: Hapus 'porter.bankUser' dari re-load
             $order->load(['porter.department']);
 
@@ -114,7 +121,6 @@ class OrderItemController extends Controller
             }
 
             return response()->json(['success' => false, 'message' => 'Porter belum ditetapkan.', 'status' => $statusArray], 400);
-
         } catch (\Exception $e) {
             Log::error("Search Porter Error: " . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan internal.'], 500);
@@ -142,7 +148,10 @@ class OrderItemController extends Controller
 
     public function ratePorter($orderId, Request $request)
     {
-        $request->validate(['rating' => 'required|integer|min:1|max:5']);
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'review' => 'nullable|string|max:1000'
+        ]);
         $order = Order::find($orderId);
         if (!$order) {
             return response()->json(['success' => false, 'message' => 'Order tidak ditemukan.'], 404);
@@ -156,12 +165,21 @@ class OrderItemController extends Controller
         if (PorterRating::where('order_id', $orderId)->exists()) {
             return response()->json(['success' => false, 'message' => 'Rating sudah diberikan untuk order ini.'], 400);
         }
-        PorterRating::create(['porter_id' => $order->porter_id, 'order_id' => $order->id, 'rating' => $request->rating]);
+        PorterRating::create([
+            'porter_id' => $order->porter_id,
+            'order_id' => $order->id,
+            'rating' => $request->rating,
+            'review' => $request->review // <-- Tambahkan ini!
+        ]);
         $avgRating = PorterRating::where('porter_id', $order->porter_id)->avg('rating');
         $porter = $order->porter;
         $porter->porter_rating = round($avgRating, 2);
         $porter->save();
-        return response()->json(['success' => true, 'message' => 'Rating berhasil diberikan', 'new_average_rating' => $porter->porter_rating]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Rating berhasil diberikan',
+            'new_average_rating' => $porter->porter_rating
+        ]);
     }
 
     public function getTenantOrderNotifications($tenantId)
@@ -169,10 +187,10 @@ class OrderItemController extends Controller
         $orders = Order::whereHas('items', function ($query) use ($tenantId) {
             $query->where('tenant_id', $tenantId);
         })
-        ->with(['status', 'customer', 'items', 'tenantLocation', 'porter'])
-        ->whereIn('order_status_id', [1, 2, 5])
-        ->orderBy('created_at', 'desc')
-        ->get();
+            ->with(['status', 'customer', 'items', 'tenantLocation', 'porter'])
+            ->whereIn('order_status_id', [1, 2, 5])
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         if ($orders->isEmpty()) {
             return response()->json(['success' => true, 'message' => 'Tidak ada order aktif untuk tenant ini.', 'data' => []]);

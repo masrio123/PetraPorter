@@ -4,35 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Porter extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes; // <-- 2. GUNAKAN TRAIT
 
-    protected $table = "porters";
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'porter_name',
         'porter_nrp',
         'department_id',
         'bank_name',
+        'account_numbers',
         'username',
-        'account_numbers', 
         'porter_isOnline',
         'isWorking',
         'timeout_until',
+        'deletion_reason' // <-- 3. Tambahkan kolom baru ke fillable
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'porter_isOnline' => 'boolean',
         'isWorking' => 'boolean',
@@ -49,7 +39,13 @@ class Porter extends Model
         return $this->hasMany(PorterRating::class);
     }
 
-    public function orders() {
+    public function orders()
+    {
         return $this->hasMany(Order::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

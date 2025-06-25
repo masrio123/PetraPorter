@@ -14,10 +14,8 @@
             <h6 class="text-muted fw-light mb-0"><i class="bx bx-calendar me-1"></i> {{ \Carbon\Carbon::now()->translatedFormat('l, j F Y') }}</h6>
         </div>
     </div>
-
     {{-- Baris untuk Kartu Statistik --}}
     <div class="row g-4 mb-4">
-
         {{-- Card 1: Total Order Selesai Hari Ini --}}
         <div class="col-lg-4 col-md-6 col-12">
             <div class="card border-0 shadow-sm">
@@ -34,7 +32,6 @@
                 </div>
             </div>
         </div>
-
         {{-- Card 2: Total Income Hari Ini --}}
         <div class="col-lg-4 col-md-6 col-12">
             <div class="card border-0 shadow-sm">
@@ -51,7 +48,6 @@
                 </div>
             </div>
         </div>
-
         {{-- Card 3: Porter Online --}}
         <div class="col-lg-4 col-md-6 col-12">
             <div class="card border-0 shadow-sm">
@@ -68,9 +64,7 @@
                 </div>
             </div>
         </div>
-
     </div>
-
 @endsection
 
 @push('styles')

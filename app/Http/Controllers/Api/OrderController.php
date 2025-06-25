@@ -70,14 +70,15 @@ class OrderController extends Controller
 
     public function getDeliverypoints()
     {
-        $delivery = DeliveryPoint::get();
+        $delivery = DeliveryPoint::where('isActive', 1)->get();
 
         return response()->json([
-                'success' => true,
-                'message' => 'List of all delivery point',
-                'data' => $delivery,
-            ], 200);
+            'success' => true,
+            'message' => 'List of active delivery point',
+            'data' => $delivery,
+        ], 200);
     }
+
 
     public function fetchOrderById($id)
     {

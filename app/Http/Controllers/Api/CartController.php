@@ -129,18 +129,10 @@ class CartController extends Controller
                     $totalQuantity <= 10 => 10000,
                     default => 10000 + (ceil($totalQuantity - 10) * 10000),
                 };
-
-                $porter = Porter::where('porter_isOnline', true)
-                    ->where(fn($q) => $q->whereNull('timeout_until')->orWhere('timeout_until', '<=', now()))
-                    ->inRandomOrder()->first();
-
-                if (!$porter) throw new \Exception('No porter available.');
-
                 $createdOrder = Order::create([
                     'cart_id' => $cart->id,
                     'customer_id' => $cart->customer_id,
-                    'delivery_point_id' => $cart->delivery_point_id,
-                    'porter_id' => $porter->id,
+                    'delivery_point_id' => $cart->delivery_point_id,                    
                     'tenant_location_id' => $cart->tenant_location_id,
                     'order_status_id' => 5,
                     'total_price' => 0,

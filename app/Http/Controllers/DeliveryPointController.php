@@ -34,13 +34,6 @@ class DeliveryPointController extends Controller
             ->with('success', 'Delivery point berhasil ditambahkan.');
     }
 
-    // Tampilkan form edit delivery point
-    public function edit($id)
-    {
-        $delivery_point = DeliveryPoint::findOrFail($id);
-        return view('dashboard.delivery-point.edit', compact('delivery_point'));
-    }
-
     // Update delivery point
     public function update(Request $request, $id)
     {
@@ -57,7 +50,6 @@ class DeliveryPointController extends Controller
             ->with('success', 'Delivery point berhasil diperbarui.');
     }
 
-    // Hapus delivery point
     public function destroy($id)
     {
         $delivery_point = DeliveryPoint::findOrFail($id);
