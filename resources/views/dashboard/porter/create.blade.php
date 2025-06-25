@@ -81,7 +81,7 @@
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="username" class="form-label">a.n. Pemilik Rekening</label>
-                                <input type="text" name="username" id="username" class="form-control form-control-lg" required value="{{ old('username') }}" placeholder="Harus sama dengan nama porter">
+                                <input type="text" name="username" id="username" class="form-control form-control-lg" required value="{{ old('username') }}">
                             </div>
                         </div>
                         <div class="d-grid mt-4">
